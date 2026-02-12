@@ -1,38 +1,3 @@
-"""
-Standalone script for fetching invoices from KSeF (Krajowy System e-Faktur).
-
-KSeF is the Polish National e-Invoice System (Krajowy System e-Faktur).
-This script supports two authentication methods:
-- XAdES-BES digital signature with a qualified certificate
-- KSeF authorization token
-
-Usage:
-    # Certificate authentication (XAdES)
-    ksef-xml-download.py --nip 1234567890 --cert cert.pem --key key.pem --password secret
-    ksef-xml-download.py --nip 1234567890 --cert cert.pem --key key.pem --password-file haslo.txt
-
-    # Token authentication
-    ksef-xml-download.py --nip 1234567890 --token "your-ksef-token"
-    ksef-xml-download.py --nip 1234567890 --token-file token.txt
-
-Options:
-    --nip           NIP of the entity (required)
-    --cert          Path to certificate file (PEM format) - for XAdES auth
-    --key           Path to private key file (PEM format) - for XAdES auth
-    --password      Password for encrypted private key
-    --password-file File containing password for private key
-    --token         KSeF authorization token - for token auth
-    --token-file    File containing KSeF token
-    --env           Environment: test, demo, prod (default: prod)
-    --date-from     Start date YYYY-MM-DD (default: 30 days ago)
-    --date-to       End date YYYY-MM-DD (default: today)
-    --subject-type  Subject1 (issued/sales) or Subject2 (received/purchases), default: Subject2
-    --output        Output format: table, json, csv (default: table)
-    --download-xml  Download full XML for each invoice
-    --download-pdf  Generate PDF for each invoice
-    --verbose       Enable verbose logging
-"""
-
 import os
 import sys
 import json
