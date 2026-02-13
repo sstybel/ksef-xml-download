@@ -12,8 +12,6 @@ This application only creates visualizations of **KSeF invoices** in **XML** for
 
 ![Example Screen-Shot ](https://github.com/sstybel/ksef-xml-download/blob/main/images/screen01.png)
 
-> Click to see a sample [**PDF**](https://github.com/sstybel/ksef-xml-download/blob/main/examples/invoice.pdf) invoice generated based on the [**KSeF XML**](https://github.com/sstybel/ksef-xml-download/blob/main/examples/invoice.xml) file.
-
 ## Syntax of the `ksef-xml-download.exe`
 
 **Usage:** `ksef-xml-download.exe` [`options`] `<ksef-xml-file>`
@@ -50,8 +48,6 @@ ksef-xml-download.exe assets/invoice.xml -o output.pdf
 &nbsp;
 
 ![Example Screen-Shot ](https://github.com/sstybel/ksef-xml-download/blob/main/images/screen01.png)
-
-> Click to see a sample [**PDF**](https://github.com/sstybel/ksef-xml-download/blob/main/examples/invoice.pdf) invoice generated based on the [**KSeF XML**](https://github.com/sstybel/ksef-xml-download/blob/main/examples/invoice.xml) file.
 
 ## Download
 
