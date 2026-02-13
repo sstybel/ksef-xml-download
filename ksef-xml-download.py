@@ -2,7 +2,6 @@ import os
 import sys
 import json
 import logging
-import tempfile
 import argparse
 import datetime
 
@@ -10,7 +9,6 @@ from ksef import ksefMisc
 from ksef import ksefError
 from ksef import ksefClient
 from ksef import ksefPDFGenerator
-from ksef import ksefEMail
 
 str_version = "1.00"
 str_app_name ="KSeF XML Invoices Downloader - ver. " + str_version
@@ -111,7 +109,7 @@ Examples:
 
     if args.xml_to_pdf:
         xml_path = args.xml_to_pdf
-        pdf_output_dir = args.pdf_output_dir
+        _pdf_output_dir = args._pdf_output_dir
 
         ksefMisc.print_app_title(str_app_name, str_author)
 
@@ -130,10 +128,10 @@ Examples:
                 print(f"ERR: No KSeF XML file(s) found in: {xml_path}", file=sys.stderr)
                 sys.exit(1)
 
-        os.makedirs(pdf_output_dir, exist_ok=True)
+        os.makedirs(_pdf_output_dir, exist_ok=True)
         pdf_generator = ksefPDFGenerator.ksefPDFGenerator(logger=logger)
 
-        print(f"Converting {len(xml_files)} KSeF XML file(s) to PDF in: {pdf_output_dir}\n")
+        print(f"Converting {len(xml_files)} KSeF XML file(s) to PDF in: {_pdf_output_dir}\n")
         err_count = 0
         for xml_file in xml_files:
             try:
@@ -141,7 +139,7 @@ Examples:
                     xml_content = f.read()
 
                 base_name = os.path.splitext(os.path.basename(xml_file))[0]
-                pdf_path = os.path.join(pdf_output_dir, f"{base_name}.pdf")
+                pdf_path = os.path.join(_pdf_output_dir, f"{base_name}.pdf")
                 pdf_generator.generate_pdf(xml_content, pdf_path)
                 print(f"  OK: {xml_file} -> {pdf_path}")
                 ok_count += 1
@@ -294,8 +292,10 @@ Examples:
             invoices = invoicesData[invoicesSub]
 
             if args.download_xml and invoices:
-                print(f"\nDownloading KSeF XML file(s) from {ksefMisc.ksefSubjectTypeLabels[invoicesSub]} to: {args.xml_output_dir}")
-                os.makedirs(args.xml_output_dir, exist_ok=True)
+                _xml_output_dir = args.xml_output_dir
+                _xml_output_dir = str(_xml_output_dir).replace('/', '\\')
+                print(f"\nDownloading KSeF XML file(s) from {ksefMisc.ksefSubjectTypeLabels[invoicesSub]} to: {_xml_output_dir}")
+                os.makedirs(_xml_output_dir, exist_ok=True)
 
                 for inv in invoices:
                     ksef_number = inv.get('ksefNumber')
@@ -304,7 +304,8 @@ Examples:
                             xml_content = get_xml_cached(ksef_number)
 
                             safe_name = ksef_number.replace('/', '_').replace('\\', '_')
-                            filepath = os.path.join(args.xml_output_dir, f"{safe_name}.xml")
+                            filepath = os.path.join(_xml_output_dir, f"{safe_name}.xml")
+                            filepath = filepath.replace('/', '\\')
                             with open(filepath, 'w+', newline="\n", encoding='utf-8') as f:
                                 f.write(xml_content)
                             print(f"  Downloaded: {filepath}")
@@ -312,8 +313,10 @@ Examples:
                             print(f"  Error downloading {ksef_number}: {e.message}", file=sys.stderr)
 
             if args.download_pdf and invoices:
-                print(f"\nGenerating PDF file(s) to: {args.pdf_output_dir}")
-                os.makedirs(args.pdf_output_dir, exist_ok=True)
+                _pdf_output_dir = args.pdf_output_dir
+                _pdf_output_dir = str(_pdf_output_dir).replace('/', '\\')
+                print(f"\nGenerating PDF file(s) to: {_pdf_output_dir}")
+                os.makedirs(_pdf_output_dir, exist_ok=True)
                 pdf_generator = ksefPDFGenerator.ksefPDFGenerator(logger=logger)
 
                 for inv in invoices:
@@ -323,7 +326,8 @@ Examples:
                             xml_content = get_xml_cached(ksef_number)
 
                             safe_name = ksef_number.replace('/', '_').replace('\\', '_')
-                            filepath = os.path.join(args.pdf_output_dir, f"{safe_name}.pdf")
+                            filepath = os.path.join(_pdf_output_dir, f"{safe_name}.pdf")
+                            filepath = filepath.replace('/', '\\')
                             pdf_generator.generate_pdf(xml_content, filepath)
                             pdf_cache[ksef_number] = filepath
                             print(f"  Generated: {filepath}")
@@ -331,177 +335,6 @@ Examples:
                             print(f"  Error generating PDF for {ksef_number}: {e.message}", file=sys.stderr)
                         except Exception as e:
                             print(f"  Error generating PDF for {ksef_number}: {e}", file=sys.stderr)
-
-            # Send invoices by email if requested
-            if args.send_email and invoices:
-                # Validate required SMTP arguments
-                missing = []
-                if not args.smtp_host:
-                    missing.append('--smtp-host')
-                if not args.smtp_user:
-                    missing.append('--smtp-user')
-                if not args.email_from:
-                    missing.append('--email-from')
-                if not args.email_to:
-                    missing.append('--email-to')
-
-                smtp_password = args.smtp_password
-                if not smtp_password and args.smtp_password_file:
-                    if not os.path.exists(args.smtp_password_file):
-                        print(f"ERR: Plik hasła SMTP nie znaleziony: {args.smtp_password_file}", file=sys.stderr)
-                        sys.exit(1)
-                    with open(args.smtp_password_file, 'r') as f:
-                        smtp_password = f.read().strip()
-                if not smtp_password:
-                    missing.append('--smtp-password or --smtp-password-file')
-
-                if missing:
-                    print(f"ERR: Brakujące wymagane opcje email: {', '.join(missing)}", file=sys.stderr)
-                    sys.exit(1)
-
-                pdf_generator_email = ksefPDFGenerator.ksefPDFGenerator(logger=logger)
-                temp_pdfs = []
-
-                logger.info(f"Konfiguracja email: host={args.smtp_host}:{args.smtp_port}, "
-                            f"użytkownik={args.smtp_user}, od={args.email_from}, "
-                            f"do={args.email_to}, grupowanie={args.email_group}")
-                logger.info(f"Szablon tematu: {args.email_subject}")
-                logger.info(f"Liczba faktur do wysłania: {len(invoices)}")
-
-                try:
-                    print(f"\nWysyłanie faktur emailem (tryb: {args.email_group})...")
-
-                    if args.email_group == 'all':
-                        # Collect all invoice data, then send one email
-                        invoices_data = []
-                        for inv in invoices:
-                            ksef_number = inv.get('ksefNumber')
-                            invoice_number = inv.get('invoiceNumber', ksef_number or 'N/A')
-                            if not ksef_number:
-                                logger.warning(f"Pomijanie faktury bez numeru KSeF: {inv}")
-                                continue
-                            try:
-                                xml_content = get_xml_cached(ksef_number)
-                                logger.info(f"  Pobrano XML dla {ksef_number} ({len(xml_content)} bajtów)")
-                            except ksefError.ksefError as e:
-                                print(f"  Błąd pobierania XML dla {ksef_number}: {e.message}", file=sys.stderr)
-                                continue
-
-                            pdf_path = pdf_cache.get(ksef_number)
-                            if pdf_path:
-                                logger.info(f"  PDF z cache dla {ksef_number}: {pdf_path}")
-                            else:
-                                try:
-                                    tmp = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
-                                    tmp.close()
-                                    pdf_generator_email.generate_pdf(xml_content, tmp.name)
-                                    pdf_path = tmp.name
-                                    pdf_cache[ksef_number] = pdf_path
-                                    temp_pdfs.append(tmp.name)
-                                    logger.info(f"  Wygenerowano tymczasowy PDF dla {ksef_number}: {tmp.name}")
-                                except Exception as e:
-                                    print(f"  Błąd generowania PDF dla {ksef_number}: {e}", file=sys.stderr)
-                                    logger.error(f"  Błąd generowania PDF dla {ksef_number}: {e}")
-                                    pdf_path = None
-
-                            invoices_data.append({
-                                'invoice_number': invoice_number,
-                                'ksef_number': ksef_number,
-                                'xml_content': xml_content,
-                                'pdf_path': pdf_path,
-                            })
-
-                        if invoices_data:
-                            subject = args.email_subject.format(
-                                invoice_number=f"{len(invoices_data)} faktur"
-                            )
-                            logger.info(f"Wysyłanie zbiorczego emaila z {len(invoices_data)} fakturą/ami...")
-                            ksefEMail.send_grouped_email(
-                                smtp_host=args.smtp_host,
-                                smtp_port=args.smtp_port,
-                                smtp_user=args.smtp_user,
-                                smtp_password=smtp_password,
-                                email_from=args.email_from,
-                                email_to=args.email_to,
-                                subject=subject,
-                                invoices_data=invoices_data,
-                                logger=logger
-                            )
-                            print(f"  Wysłano 1 email z {len(invoices_data)} fakturą/ami")
-                        else:
-                            logger.warning("Brak faktur do wysłania w trybie zbiorczym")
-                    else:
-                        # Send one email per invoice
-                        sent_count = 0
-                        err_count = 0
-                        for idx, inv in enumerate(invoices, 1):
-                            ksef_number = inv.get('ksefNumber')
-                            invoice_number = inv.get('invoiceNumber', ksef_number or 'N/A')
-                            if not ksef_number:
-                                logger.warning(f"Pomijanie faktury bez numeru KSeF: {inv}")
-                                continue
-
-                            logger.info(f"Przetwarzanie faktury {idx}/{len(invoices)}: {invoice_number} ({ksef_number})")
-
-                            try:
-                                xml_content = get_xml_cached(ksef_number)
-                                logger.info(f"  Pobrano XML dla {ksef_number} ({len(xml_content)} bajtów)")
-                            except ksefError.ksefError as e:
-                                print(f"  Błąd pobierania XML dla {ksef_number}: {e.message}", file=sys.stderr)
-                                err_count += 1
-                                continue
-
-                            pdf_path = pdf_cache.get(ksef_number)
-                            if pdf_path:
-                                logger.info(f"  PDF z cache dla {ksef_number}: {pdf_path}")
-                            else:
-                                try:
-                                    tmp = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
-                                    tmp.close()
-                                    pdf_generator_email.generate_pdf(xml_content, tmp.name)
-                                    pdf_path = tmp.name
-                                    pdf_cache[ksef_number] = pdf_path
-                                    temp_pdfs.append(tmp.name)
-                                    logger.info(f"  Wygenerowano tymczasowy PDF dla {ksef_number}: {tmp.name}")
-                                except Exception as e:
-                                    print(f"  Błąd generowania PDF dla {ksef_number}: {e}", file=sys.stderr)
-                                    logger.error(f"  Błąd generowania PDF dla {ksef_number}: {e}")
-                                    pdf_path = None
-
-                            subject = args.email_subject.format(invoice_number=invoice_number)
-                            try:
-                                ksefEMail.send_invoice_email(
-                                    smtp_host=args.smtp_host,
-                                    smtp_port=args.smtp_port,
-                                    smtp_user=args.smtp_user,
-                                    smtp_password=smtp_password,
-                                    email_from=args.email_from,
-                                    email_to=args.email_to,
-                                    subject=subject,
-                                    invoice_number=invoice_number,
-                                    ksef_number=ksef_number,
-                                    xml_content=xml_content,
-                                    pdf_path=pdf_path,
-                                    logger=logger
-                                )
-                                sent_count += 1
-                                print(f"  Wysłano: {invoice_number} ({ksef_number})")
-                            except Exception as e:
-                                err_count += 1
-                                print(f"  Błąd wysyłania emaila dla {ksef_number}: {e}", file=sys.stderr)
-                                logger.error(f"  Błąd SMTP dla {ksef_number}: {e}")
-
-                        print(f"  Wysłano {sent_count} email(i)" + (f", błędy: {err_count}" if err_count else ""))
-
-                finally:
-                    if temp_pdfs:
-                        logger.info(f"Deleting {len(temp_pdfs)} temporary PDF file(s)...")
-                    for tmp_path in temp_pdfs:
-                        try:
-                            os.unlink(tmp_path)
-                            logger.debug(f"  Temporary file deleted: {tmp_path}")
-                        except OSError as e:
-                            logger.warning(f"  Failed to delete temporary file {tmp_path}: {e}")
 
         print("\nEnding session...")
         client.terminate_session()

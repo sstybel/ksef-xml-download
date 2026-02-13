@@ -11,6 +11,8 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.units import mm
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 
+from ksef import ksefFonts
+
 _FONT_REGISTERED = False
 _FONT_NAME = 'Helvetica'
 
@@ -19,19 +21,20 @@ def _register_polish_font(logger: logging.Logger = None):
     if _FONT_REGISTERED:
         return
 
-    font_paths = [
-        './DejaVuSans.ttf',
-    ]
+    fonts= ksefFonts.create_fonts()
 
-    for font_path in font_paths:
+    for font in fonts:
+        font_path = fonts[font]
         if os.path.exists(font_path):
             try:
-                pdfmetrics.registerFont(TTFont('DejaVuSans', font_path))
-                _FONT_NAME = 'DejaVuSans'
+                pdfmetrics.registerFont(TTFont(font, font_path))
+                _FONT_NAME = font
                 logger.info(f"Registered font: {font_path}")
                 break
             except Exception as e:
                 logger.warning(f"Failed to register font {font_path}: {e}")
+    
+    ksefFonts.destroy_fonts(fonts)
 
     _FONT_REGISTERED = True
 
@@ -100,8 +103,7 @@ class ksefPDFGenerator:
     def _get_text(self, element, xpath: str, default: str = '') -> str:
         for prefix, ns in self.NAMESPACES.items():
             try:
-                result = element.find(xpath.replace('//', f'//{prefix}:').replace('/', f'/{prefix}:'),
-                                      {prefix: ns})
+                result = element.find(xpath.replace('//', f'//{prefix}:').replace('/', f'/{prefix}:'), {prefix: ns})
                 if result is not None and result.text:
                     return result.text.strip()
             except Exception:
