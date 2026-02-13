@@ -60,8 +60,8 @@ Examples:
                         help='KSeF environment (default: prod)')
     parser.add_argument('--date-from', help='Start date YYYY-MM-DD (default: 30 days ago)')
     parser.add_argument('--date-to', help='End date YYYY-MM-DD (default: today)')
-    parser.add_argument('--subject-type', choices=['Subject1', 'Subject2', 'Subject1&2'], default='Subject2',
-                        help='Subject1=issued/sales, Subject2=received/purchases, Subject1&2=issued/sales & received/purchases (default: Subject2)')
+    parser.add_argument('--subject-type', choices=['Subject1', 'Subject2', 'Subject1and2'], default='Subject2',
+                        help='Subject1=issued/sales, Subject2=received/purchases, Subject1and2=issued/sales and received/purchases (default: Subject2)')
     parser.add_argument('--output', choices=['table', 'json', 'csv'], default='table',
                         help='Output format (default: table)')
     parser.add_argument('--download-xml', action='store_true',
@@ -74,24 +74,6 @@ Examples:
                         help='Directory to save PDF files (default: current directory)')
     parser.add_argument('--verbose', '-v', action='store_true',
                         help='Enable verbose logging')
-
-    email_group = parser.add_argument_group('E-Mail sending')
-    email_group.add_argument('--send-email', action='store_true',
-                             help='Send invoices by E-Mail')
-    email_group.add_argument('--smtp-host', help='SMTP server address')
-    email_group.add_argument('--smtp-port', type=int, default=587,
-                             help='SMTP server port (default: 587)')
-    email_group.add_argument('--smtp-user', help='SMTP username')
-    email_group.add_argument('--smtp-password', help='SMTP password')
-    email_group.add_argument('--smtp-password-file', help='File containing SMTP password')
-    email_group.add_argument('--email-from', help='Sender E-Mail address')
-    email_group.add_argument('--email-to', action='append', metavar='ADDRESS',
-                             help='Recipient E-Mail address (can be specified multiple times)')
-    email_group.add_argument('--email-subject',
-                             default='KSeF Invoice: {invoice_number}',
-                             help='E-Mail subject template (default: "KSeF Invoice: {invoice_number}")')
-    email_group.add_argument('--email-group', choices=['single', 'all'], default='single',
-                             help='Grouping: single (one E-Mail per invoice, default) or all (all in one E-Mail)')
 
     args = parser.parse_args()
 
@@ -245,7 +227,7 @@ Examples:
         if date_from:
             print(f"Date range: {date_from} - {date_to or 'today'}")
 
-        if (subject_type == "Subject1&2"):
+        if (subject_type == "Subject1and2"):
             result = client.query_invoices(
                 subject_type="Subject1",
                 date_from=date_from,

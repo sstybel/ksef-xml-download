@@ -2,7 +2,7 @@ import json
 import datetime
 
 ksefSubjectTypeLabels = {
-    "Subject1&2": "issued (sales) & received (purchases) - Subject1 & Subject2",
+    "Subject1and2": "issued (sales) and received (purchases) - Subject1 and Subject2",
     "Subject1": "issued (sales) - Subject1",
     "Subject2": "received (purchases) - Subject2"
 }
