@@ -8,7 +8,6 @@ import datetime
 from ksef import ksefMisc
 from ksef import ksefError
 from ksef import ksefClient
-from ksef import ksefPDFGenerator
 
 str_version = "1.00"
 str_app_name ="KSeF XML Invoices Downloader - ver. " + str_version
@@ -32,19 +31,10 @@ Examples:
 
     # With options
     %(prog)s --nip 1234567890 --token-file token.txt --env prod --date-from 2026-02-01
-    %(prog)s --nip 1234567890 --token-file token.txt --download-pdf --pdf-output-dir ./pdf
-
-    # Offline conversation KSeF invoices of XML format to visualization invoices of PDF format (no authentication needed)
-    %(prog)s --xml-to-pdf invoices.xml
-    %(prog)s --xml-to-pdf ./invoices_xml/ --pdf-output-dir ./invoices_pdf/
         """
     )
 
     parser.add_argument('--nip', help='NIP (Tax ID) of the entity (required for KSeF queries)', required=True)
-
-    offline_group = parser.add_argument_group('Offline XML to PDF conversion (no authentication needed)')
-    offline_group.add_argument('--xml-to-pdf', metavar='PATH',
-                               help='Convert XML file or directory of XML files to PDF (offline, no KSeF auth)')
 
     auth_cert = parser.add_argument_group('Certificate authentication (XAdES)')
     auth_cert.add_argument('--cert', help='Path to certificate file (PEM)', required=(('--nip' in sys.argv) and not(('--token' in sys.argv) or ('--token-file' in sys.argv))))
@@ -68,69 +58,16 @@ Examples:
                         help='Download full XML for each invoice')
     parser.add_argument('--xml-output-dir', default='.',
                         help='Directory to save XML files (default: current directory)')
-    parser.add_argument('--download-pdf', action='store_true',
-                        help='Generate PDF for each invoice')
-    parser.add_argument('--pdf-output-dir', default='.',
-                        help='Directory to save PDF files (default: current directory)')
     parser.add_argument('--verbose', '-v', action='store_true',
                         help='Enable verbose logging')
 
     args = parser.parse_args()
-
-    if args.smtp_host and not args.send_email:
-        args.send_email = True
-
-    if not args.email_from and args.smtp_user:
-        args.email_from = args.smtp_user
 
     log_level = logging.DEBUG if args.verbose else logging.WARNING
     logging.basicConfig(
         level=log_level,
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
-
-    if args.xml_to_pdf:
-        xml_path = args.xml_to_pdf
-        _pdf_output_dir = args._pdf_output_dir
-
-        ksefMisc.print_app_title(str_app_name, str_author)
-
-        if not os.path.exists(xml_path):
-            print(f"ERR: Path not found: {xml_path}", file=sys.stderr)
-            sys.exit(1)
-
-        if os.path.isfile(xml_path):
-            xml_files = [xml_path]
-        else:
-            xml_files = sorted(
-                f.path for f in os.scandir(xml_path)
-                if f.is_file() and f.name.lower().endswith('.xml')
-            )
-            if not xml_files:
-                print(f"ERR: No KSeF XML file(s) found in: {xml_path}", file=sys.stderr)
-                sys.exit(1)
-
-        os.makedirs(_pdf_output_dir, exist_ok=True)
-        pdf_generator = ksefPDFGenerator.ksefPDFGenerator(logger=logger)
-
-        print(f"Converting {len(xml_files)} KSeF XML file(s) to PDF in: {_pdf_output_dir}\n")
-        err_count = 0
-        for xml_file in xml_files:
-            try:
-                with open(xml_file, 'r', encoding='utf-8') as f:
-                    xml_content = f.read()
-
-                base_name = os.path.splitext(os.path.basename(xml_file))[0]
-                pdf_path = os.path.join(_pdf_output_dir, f"{base_name}.pdf")
-                pdf_generator.generate_pdf(xml_content, pdf_path)
-                print(f"  OK: {xml_file} -> {pdf_path}")
-                ok_count += 1
-            except Exception as e:
-                print(f"  ERR: {xml_file}: {e}", file=sys.stderr)
-                err_count += 1
-
-        print(f"\nDone. Converted KSeF XML files to PDF: {ok_count}, errors: {err_count}")
-        sys.exit(0 if err_count == 0 else 1)
 
     use_token_auth = args.token or args.token_file
     use_cert_auth = args.cert or args.key
@@ -293,30 +230,6 @@ Examples:
                             print(f"  Downloaded: {filepath}")
                         except ksefError.ksefError as e:
                             print(f"  Error downloading {ksef_number}: {e.message}", file=sys.stderr)
-
-            if args.download_pdf and invoices:
-                _pdf_output_dir = args.pdf_output_dir
-                _pdf_output_dir = str(_pdf_output_dir).replace('/', '\\')
-                print(f"\nGenerating PDF file(s) to: {_pdf_output_dir}")
-                os.makedirs(_pdf_output_dir, exist_ok=True)
-                pdf_generator = ksefPDFGenerator.ksefPDFGenerator(logger=logger)
-
-                for inv in invoices:
-                    ksef_number = inv.get('ksefNumber')
-                    if ksef_number:
-                        try:
-                            xml_content = get_xml_cached(ksef_number)
-
-                            safe_name = ksef_number.replace('/', '_').replace('\\', '_')
-                            filepath = os.path.join(_pdf_output_dir, f"{safe_name}.pdf")
-                            filepath = filepath.replace('/', '\\')
-                            pdf_generator.generate_pdf(xml_content, filepath)
-                            pdf_cache[ksef_number] = filepath
-                            print(f"  Generated: {filepath}")
-                        except ksefError.ksefError as e:
-                            print(f"  Error generating PDF for {ksef_number}: {e.message}", file=sys.stderr)
-                        except Exception as e:
-                            print(f"  Error generating PDF for {ksef_number}: {e}", file=sys.stderr)
 
         print("\nEnding session...")
         client.terminate_session()
