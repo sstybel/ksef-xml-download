@@ -1,3 +1,4 @@
+import os
 import json
 import datetime
 
@@ -27,13 +28,17 @@ def format_amount_csv(amount) -> str:
     val = format_amount(amount)
     return str(val).replace('.', ',')
     
-def create_filename(filename, path=".\\t", prefix_filename="ksef", fileextension=".json"):
+def create_filename(filename, path=".\\", prefix_filename="ksef", fileextension=".json"):
     str_timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    new_filename = f"{prefix_filename}_{filename}_{str_timestamp}{fileextension}"
+    filepath = os.path.join(path, f"{new_filename}")
+    filepath = filepath.replace('/', f"\\")
+    filepath = filepath.replace(f"\\.\\", f".\\")
 
-    return f"{path}{prefix_filename}_{filename}_{str_timestamp}{fileextension}"
+    return filepath
 
-def print_invoices_table(invoices_dict: dict):
-    tab_output_filename = create_filename("invoices-output-table", path=".\\", prefix_filename="ksef", fileextension=".txt")  
+def print_invoices_table(invoices_dict: dict = {}, output_path=".\\"):
+    tab_output_filename = create_filename("invoices-output-table", path=output_path, prefix_filename="ksef", fileextension=".txt")  
 
     if not invoices_dict:
         print("No invoices found.")
@@ -68,15 +73,19 @@ def print_invoices_table(invoices_dict: dict):
         tab_file.write("=" * 140 + "\n")
         tab_file.write(f"Total: {len(invoices)} invoice(s)\n")
 
-def print_invoices_csv(invoices_dict: dict):
-    csv_output_filename = create_filename("invoices-output-csv", path=".\\", prefix_filename="ksef", fileextension=".csv")  
+def print_invoices_csv(invoices_dict: dict = {}, output_path=".\\", xml_path=".\\"):
+    csv_output_filename = create_filename("invoices-output-csv", path=output_path, prefix_filename="ksef", fileextension=".csv")  
 
     if not invoices_dict:
         print("No invoices found.")
         return
 
-    with open(csv_output_filename, 'w', encoding='utf-8') as csv_file:
-        csv_header = f"\"ksefSubjectType\";\"ksefNumber\";\"formSystemCode\";\"formSchemaVersion\";\"formValue\";\"invoiceNumber\";\"invoiceIssueDate\";\"invoiceCurrency\";\"invoiceType\";\"invoicingMode\";\"invoiceHash\";\"sellerNIP\";\"sellerName\";\"buyerIdType\";\"buyerIdValue\";\"buyerName\";\"netAmount\";\"vatAmount\";\"grossAmount\"" 
+    xml_output_dir = xml_path
+    xml_output_dir = str(xml_output_dir).replace('/', f"\\")
+    xml_output_dir = xml_output_dir.replace(f"\\.\\", f".\\")
+
+    with open(csv_output_filename, 'w', encoding='windows-1250') as csv_file:
+        csv_header = f"\"ksefSubjectType\";\"ksefNumber\";\"formSystemCode\";\"formSchemaVersion\";\"formValue\";\"invoiceNumber\";\"invoiceIssueDate\";\"invoiceCurrency\";\"invoiceType\";\"invoicingMode\";\"invoiceHash\";\"sellerNIP\";\"sellerName\";\"buyerIdType\";\"buyerIdValue\";\"buyerName\";\"netAmount\";\"vatAmount\";\"grossAmount\";\"qrCode\";\"fileName\"" 
         print(csv_header)
         csv_file.write(csv_header + "\n")
 
@@ -112,16 +121,103 @@ def print_invoices_csv(invoices_dict: dict):
                 net = format_amount_csv(inv.get('netAmount'))
                 vat = format_amount_csv(inv.get('vatAmount'))
 
+                ksef_num_spl = ksef_num.split('-')
+                qrCodeData = str(ksef_num_spl[1])
+                qrCodeData = qrCodeData[6:8]  + "-" + qrCodeData[4:6]  + "-" + qrCodeData[0:4]
+                grHash = str(inv_hash).split('=')[0]
+                grHash = grHash.replace('+', '-')
+                grHash = grHash.replace('/', '_')
+                qrCode = 'https://qr.ksef.mf.gov.pl/invoice/' + ksef_num_spl[0] + '/' + qrCodeData + '/' + grHash
+                fileName = f"{ksef_num}.xml"
+                fileName= fileName.replace('/', '_').replace(f"\\", '_')
+                fileName = os.path.join(xml_output_dir, f"{fileName}")
+                fileName = fileName.replace('/', f"\\")
+                fileName = fileName.replace(f"\\.\\", f".\\")
+    
                 csv_record = ""
-                csv_record = csv_record + f"\"{ksef_subtype}\";\"{ksef_num}\";\"{form_scode}\";\"{form_ver}\";\"{form_val}\";\"{inv_num}\";\"{inv_date}\";\"{inv_curr}\";\"{inv_type}\";\"{inv_mode}\";\"{inv_hash}\";\"{seller_nip}\";\"{seller_name}\";\"{buyer_type}\";\"{buyer_val}\";\"{buyer_name}\";\"{net}\";\"{vat}\";\"{gross}\""
+                csv_record = csv_record + f"\"{ksef_subtype}\";\"{ksef_num}\";\"{form_scode}\";\"{form_ver}\";\"{form_val}\";\"{inv_num}\";\"{inv_date}\";\"{inv_curr}\";\"{inv_type}\";\"{inv_mode}\";\"{inv_hash}\";\"{seller_nip}\";\"{seller_name}\";\"{buyer_type}\";\"{buyer_val}\";\"{buyer_name}\";\"{net}\";\"{vat}\";\"{gross}\";\"{qrCode}\";\"{fileName}\""
             
                 print(csv_record.strip())
                 csv_file.write(csv_record.strip() + "\n")
 
-def print_invoices_json(invoices: dict):
-    print(json.dumps(invoices, indent=4, ensure_ascii=False, default=str))
+def print_invoices_json(invoices_dict: dict = {}, output_path=".\\", xml_path=".\\"):
+    _invoices = {}
+    for subject_type, invoices in invoices_dict.items():
+        _invoices[subject_type] = invoices.copy()
 
-    json_output_filename = create_filename("invoices-output-json", path=".\\", prefix_filename="ksef", fileextension=".json")  
+    xml_output_dir = xml_path
+    xml_output_dir = str(xml_output_dir).replace('/', f"\\")
+    xml_output_dir = xml_output_dir.replace(f"\\.\\", f".\\")
+        
+    for inv_sub in invoices_dict:
+        inv = invoices_dict[inv_sub]
+        inv_rec_num = 0
+        for inv_rec in inv:
+            ksef_num = inv_rec.get('ksefNumber', 'N/A')[:44]
+            inv_hash = inv_rec.get('invoiceHash', 'N/A')
+            ksef_num_spl = ksef_num.split('-')
+            qrCodeData = str(ksef_num_spl[1])
+            qrCodeData = qrCodeData[6:8]  + "-" + qrCodeData[4:6]  + "-" + qrCodeData[0:4]
+            grHash = str(inv_hash).split('=')[0]
+            grHash = grHash.replace('+', '-')
+            grHash = grHash.replace('/', '_')
+            qrCode = 'https://qr.ksef.mf.gov.pl/invoice/' + ksef_num_spl[0] + '/' + qrCodeData + '/' + grHash
+            fileName = f"{ksef_num}.xml"
+            fileName= fileName.replace('/', '_').replace(f"\\", '_')
+            fileName = os.path.join(xml_output_dir, f"{fileName}")
+            fileName = fileName.replace('/', f"\\")
+            fileName = fileName.replace(f"\\.\\", f".\\")
+            _invoices[inv_sub][inv_rec_num].update({"qrCode": qrCode})
+            _invoices[inv_sub][inv_rec_num].update({"fileName": fileName})
+            inv_rec_num += 1
+
+    print(json.dumps(_invoices, indent=4, ensure_ascii=False, default=str))
+
+    json_output_filename = create_filename("invoices-output-json", path=output_path, prefix_filename="ksef", fileextension=".json")  
 
     with open(json_output_filename, 'w', encoding='utf-8') as json_file:
-        json.dump(invoices, json_file, ensure_ascii=False, indent=4)
+        json.dump(_invoices, json_file, ensure_ascii=False, indent=4)
+
+def ksef_CheckState(state_dir = ".\\", xml_output_dir = ".\\", invoices_dict: dict = {}) -> dict:
+
+    state_file_path = os.path.join(state_dir, 'ksef_state.json')
+    state_file_path = state_file_path.replace('/', f"\\")
+    state_file_path = state_file_path.replace(f"\\.\\", f".\\")
+
+    _invoices_dict = {}
+    for subject_type, invoices in invoices_dict.items():
+        _invoices_dict[subject_type] = invoices.copy()
+
+    try:
+        with open(state_file_path, 'r', encoding='utf-8') as state_file:
+            state_data = json.load(state_file)
+        print(f"KSeF state loaded from: {state_file_path}")
+    except FileNotFoundError:
+        print(f"No existing KSeF state found at: {state_file_path}. A new state file will be created at: {state_file_path}")
+        state_data = {}
+
+    for subject_type, invoices in invoices_dict.items():
+        for invoice in invoices:
+            ksef_number = invoice.get('ksefNumber')
+            if ksef_number:
+                ksef_idx = f"{subject_type}_{ksef_number}"
+                if ksef_idx in state_data:
+                    invHash = invoice['invoiceHash']
+                    stateInvHash = state_data[ksef_idx].get('Hash')
+                    idx = _invoices_dict[subject_type].index(invoice)
+                    if (invHash == stateInvHash) and (idx >= 0):
+                        del _invoices_dict[subject_type][idx]
+                else:
+                    safe_name = ksef_number.replace('/', '_').replace(f"\\", '_')
+                    xmlfilepath = os.path.join(xml_output_dir, f"{safe_name}.xml")
+                    xmlfilepath = xmlfilepath.replace('/', f"\\")
+                    xmlfilepath = xmlfilepath.replace(f"\\.\\", f".\\")
+                    state_ksef = {"ksefNumber": ksef_number, "SubjectType": subject_type, "Hash": invoice['invoiceHash'], "IssueDate": invoice['issueDate'], "xmlFilePath": xmlfilepath}
+                    state_data.update({ksef_idx: state_ksef})
+
+    os.makedirs(state_dir, exist_ok=True)
+    with open(state_file_path, 'w', encoding='utf-8') as state_file:
+        json.dump(state_data, state_file, ensure_ascii=False, indent=4)
+    print(f"KSeF state saved to: {state_file_path}")
+
+    return _invoices_dict

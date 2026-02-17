@@ -19,6 +19,7 @@ def main():
     parser = argparse.ArgumentParser(
         description='Download invoices from National e-Invoice System - KSeF (Krajowy System e-Faktur)',
         formatter_class=argparse.RawDescriptionHelpFormatter,
+        add_help=False,
         epilog="""
 Examples:
     # Certificate authentication (XAdES) to KSeF system - requires nip (Tax ID), cert, key, and password
@@ -34,7 +35,7 @@ Examples:
         """
     )
 
-    parser.add_argument('--nip', help='NIP (Tax ID) of the entity (required for KSeF queries)', required=True)
+    parser.add_argument('--nip', help='NIP (Tax ID) of the entity (required for KSeF queries)', required=(not(('--help' in sys.argv) or ('-h' in sys.argv))))
 
     auth_cert = parser.add_argument_group('Certificate authentication (XAdES)')
     auth_cert.add_argument('--cert', help='Path to certificate file (PEM)', required=(('--nip' in sys.argv) and not(('--token' in sys.argv) or ('--token-file' in sys.argv))))
@@ -49,19 +50,29 @@ Examples:
     parser.add_argument('--env', choices=['test', 'demo', 'prod'], default='prod',
                         help='KSeF environment (default: prod)')
     parser.add_argument('--date-from', help='Start date YYYY-MM-DD (default: 30 days ago)')
-    parser.add_argument('--date-to', help='End date YYYY-MM-DD (default: today)')
+    parser.add_argument('--date-to', help='End date YYYY-MM-DD (default: today)')    
     parser.add_argument('--subject-type', choices=['Subject1', 'Subject2', 'Subject1and2'], default='Subject2',
-                        help='Subject1=issued/sales, Subject2=received/purchases, Subject1and2=issued/sales and received/purchases (default: Subject2)')
-    parser.add_argument('--output', choices=['table', 'json', 'csv'], default='table',
-                        help='Output format (default: table)')
+                        help='Subject1=issued/sales, Subject2=received/purchases, Subject1and2=issued/sales and received/purchases (default subject type: Subject2)')
+    parser.add_argument('--ksef-state-dir', default=f".\\",
+                        help='Path to the state file (ksef_state.json) for downloading invoices from the KSeF system. If not provided, the state will be stored in the current directory.')    
+    parser.add_argument('--output', choices=['json', 'csv', 'table'], default='json',
+                        help='Output format of results to display and save to file under the name according to the pattern ksef_invoices-output-[json | csv | txt]_YYYYMMDDhhmmss.[json | csv | txt] (default output format: json)')
+    parser.add_argument('--output-dir', default=f".\\",
+                        help='Directory to save output files (default: current directory)')   
     parser.add_argument('--download-xml', action='store_true',
                         help='Download full XML for each invoice')
-    parser.add_argument('--xml-output-dir', default='.',
+    parser.add_argument('--xml-output-dir', default=f".\\",
                         help='Directory to save XML files (default: current directory)')
     parser.add_argument('--verbose', '-v', action='store_true',
                         help='Enable verbose logging')
+    parser.add_argument('--help', '-h', action='store_true',
+                        help='Show this help message and exit')
 
     args = parser.parse_args()
+
+    if args.help:
+        parser.print_help()
+        sys.exit(0)
 
     log_level = logging.DEBUG if args.verbose else logging.WARNING
     logging.basicConfig(
@@ -192,15 +203,25 @@ Examples:
             invSubX = result.get('invoices', [])
             invoicesData = {f"{subject_type}": invSubX}
 
-        if args.output == 'json':
-            ksefMisc.print_invoices_json(invoicesData)
-        elif args.output == 'csv':
-            ksefMisc.print_invoices_csv(invoicesData)
+        if args.ksef_state_dir:
+            invoicesData = ksefMisc.ksef_CheckState(state_dir=args.ksef_state_dir, xml_output_dir=args.xml_output_dir, invoices_dict=invoicesData)
+
+        if args.output_dir:
+            output_dir = str(args.output_dir)
+            output_dir = str(output_dir).replace('/', f"\\")
+            output_dir = output_dir.replace(f"\\.\\", f".\\")
+            os.makedirs(output_dir, exist_ok=True)
         else:
-            ksefMisc.print_invoices_table(invoicesData)
+            output_dir = f".\\"
+
+        if args.output == 'json':
+            ksefMisc.print_invoices_json(invoicesData, output_path=output_dir, xml_path=args.xml_output_dir)
+        elif args.output == 'csv':
+            ksefMisc.print_invoices_csv(invoicesData, output_path=output_dir, xml_path=args.xml_output_dir)
+        else:
+            ksefMisc.print_invoices_table(invoicesData, output_path=output_dir)
 
         xml_cache = {}
-        pdf_cache = {}
 
         def get_xml_cached(ksef_number):
             if ksef_number not in xml_cache:
@@ -212,7 +233,8 @@ Examples:
 
             if args.download_xml and invoices:
                 _xml_output_dir = args.xml_output_dir
-                _xml_output_dir = str(_xml_output_dir).replace('/', '\\')
+                _xml_output_dir = str(_xml_output_dir).replace('/', f"\\")
+                _xml_output_dir = _xml_output_dir.replace(f"\\.\\", f".\\")
                 print(f"\nDownloading KSeF XML file(s) from {ksefMisc.ksefSubjectTypeLabels[invoicesSub]} to: {_xml_output_dir}")
                 os.makedirs(_xml_output_dir, exist_ok=True)
 
@@ -222,9 +244,10 @@ Examples:
                         try:
                             xml_content = get_xml_cached(ksef_number)
 
-                            safe_name = ksef_number.replace('/', '_').replace('\\', '_')
+                            safe_name = ksef_number.replace('/', '_').replace(f"\\", '_')
                             filepath = os.path.join(_xml_output_dir, f"{safe_name}.xml")
-                            filepath = filepath.replace('/', '\\')
+                            filepath = filepath.replace('/', f"\\")
+                            filepath = filepath.replace(f"\\.\\", f".\\")
                             with open(filepath, 'w+', newline="\n", encoding='utf-8') as f:
                                 f.write(xml_content)
                             print(f"  Downloaded: {filepath}")
