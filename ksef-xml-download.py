@@ -11,7 +11,7 @@ from ksef import ksefClient
 
 str_version = "1.00"
 str_app_name ="KSeF XML Invoices Downloader - ver. " + str_version
-str_author = "Copyright (c) 2025 - 2026 by Sebastian Stybel, www.BONO.Edu.PL"
+str_author = "Copyright (c) 2025 - 2026 by Sebastian Stybel, www.BONO-IT.pl"
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +32,11 @@ Examples:
 
     # With options
     %(prog)s --nip 1234567890 --token-file token.txt --env prod --date-from 2026-02-01
+    %(prog)s --nip 1234567890 --token-file token.txt --env prod --subject-type Subject1
+                         --output json --xml-output-dir .\\invoices-sales\\
+    %(prog)s --nip 1234567890 --token-file token.txt --env prod --ksef-state-dir d:\\_test-ksef_\\state\\
+                         --subject-type Subject1and2 --output json --output-dir d:\\_test-ksef_\\output\\ --download-xml
+                         --xml-output-dir d:\\_test-ksef_\\invoices\\
         """
     )
 
@@ -47,7 +52,7 @@ Examples:
     auth_token.add_argument('--token', help='KSeF authorization token', required=(('--nip' in sys.argv) and not('--cert' in sys.argv) and not('--token-file' in sys.argv)))
     auth_token.add_argument('--token-file', help='File containing KSeF token', required=(('--nip' in sys.argv) and not('--cert' in sys.argv) and not('--token' in sys.argv)))
 
-    parser.add_argument('--env', choices=['test', 'demo', 'prod'], default='prod',
+    parser.add_argument('--env', choices=['prod', 'test', 'demo'], default='prod',
                         help='KSeF environment (default: prod)')
     parser.add_argument('--date-from', help='Start date YYYY-MM-DD (default: 30 days ago)')
     parser.add_argument('--date-to', help='End date YYYY-MM-DD (default: today)')    
