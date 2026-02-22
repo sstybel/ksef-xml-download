@@ -24,12 +24,6 @@ KSEF_URLS = {
     'prod': 'https://api.ksef.mf.gov.pl/v2',
 }
 
-KSEF_QR_URLS = {
-    'test': 'https://qr-test.ksef.mf.gov.pl',
-    'demo': 'https://qr-demo.ksef.mf.gov.pl',
-    'prod': 'https://qr.ksef.mf.gov.pl',
-}
-
 class ksefClient:
     def __init__(
         self,
