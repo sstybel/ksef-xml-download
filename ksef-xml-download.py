@@ -58,7 +58,7 @@ Examples:
     parser.add_argument('--date-to', help='End date YYYY-MM-DD (default: today)')    
     parser.add_argument('--subject-type', choices=['Subject1', 'Subject2', 'Subject1and2'], default='Subject2',
                         help='Subject1=issued/sales, Subject2=received/purchases, Subject1and2=issued/sales and received/purchases (default subject type: Subject2)')
-    parser.add_argument('--ksef-state-dir', default=f".\\",
+    parser.add_argument('--ksef-state-dir', default=None,
                         help='Path to the state file (ksef_state.json) for downloading invoices from the KSeF system. If not provided, the state will be stored in the current directory.')    
     parser.add_argument('--output', choices=['json', 'csv', 'table'], default='json',
                         help='Output format of results to display and save to file under the name according to the pattern ksef_invoices-output-[json | csv | txt]_YYYYMMDDhhmmss.[json | csv | txt] (default output format: json)')
