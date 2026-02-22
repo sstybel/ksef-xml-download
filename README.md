@@ -66,14 +66,14 @@ ksef-xml-download.exe --nip 1234567890 --token-file token.txt
 ksef-xml-download.exe --nip 1234567890 --token-file token.txt --env prod --date-from 2026-02-01
 
 ksef-xml-download.exe --nip 1234567890 --token-file token.txt --env prod --subject-type Subject1
-                        --output json --xml-output-dir .\invoices-sales\
+                      --output json --xml-output-dir .\invoices-sales\
 
 ksef-xml-download.exe --nip 1234567890 --token-file token.txt
-                        --env prod --ksef-state-dir d:\_test-ksef_\state\
-                        --subject-type Subject1and2 --output json
-                        --output-dir d:\_test-ksef_\output\
-                        --download-xml
-                        --xml-output-dir d:\_test-ksef_\invoices\
+                      --env prod --ksef-state-dir d:\_test-ksef_\state\
+                      --subject-type Subject1and2 --output json
+                      --output-dir d:\_test-ksef_\output\
+                      --download-xml
+                      --xml-output-dir d:\_test-ksef_\invoices\
 ```
 
 &nbsp;
