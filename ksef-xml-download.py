@@ -247,14 +247,14 @@ Examples:
                     ksef_number = inv.get('ksefNumber')
                     if ksef_number:
                         try:
-                            xml_content = get_xml_cached(ksef_number)
+                            xml_raw = get_xml_cached(ksef_number)
 
                             safe_name = ksef_number.replace('/', '_').replace(f"\\", '_')
                             filepath = os.path.join(_xml_output_dir, f"{safe_name}.xml")
                             filepath = filepath.replace('/', f"\\")
                             filepath = filepath.replace(f"\\.\\", f".\\")
-                            with open(filepath, 'w+', newline="\n", encoding='utf-8') as f:
-                                f.write(xml_content)
+                            with open(filepath, 'wb') as f:
+                                f.write(xml_raw)
                             print(f"  Downloaded: {filepath}")
                         except ksefError.ksefError as e:
                             print(f"  Error downloading {ksef_number}: {e.message}", file=sys.stderr)

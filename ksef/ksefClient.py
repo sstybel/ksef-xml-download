@@ -24,6 +24,12 @@ KSEF_URLS = {
     'prod': 'https://api.ksef.mf.gov.pl/v2',
 }
 
+KSEF_QR_URLS = {
+    'test': 'https://qr-test.ksef.mf.gov.pl',
+    'demo': 'https://qr-demo.ksef.mf.gov.pl',
+    'prod': 'https://qr.ksef.mf.gov.pl',
+}
+
 class ksefClient:
     def __init__(
         self,
@@ -31,7 +37,7 @@ class ksefClient:
         key_path: str = None,
         key_password: str = None,
         token: str = None,
-        environment: str = 'test',
+        environment: str = 'prod',
         timeout: int = 30,
         logger: logging.Logger = None
     ):
@@ -69,7 +75,7 @@ class ksefClient:
         self.logger = logger or logging.getLogger(__name__) 
 
     @classmethod
-    def from_token(cls, token: str, environment: str = 'test', timeout: int = 30):
+    def from_token(cls, token: str, environment: str = 'prod', timeout: int = 30):
         """
         Create KSeF client for token-based authentication.
 
@@ -85,7 +91,7 @@ class ksefClient:
 
     @classmethod
     def from_certificate(cls, cert_path: str, key_path: str, key_password: str = None,
-                         environment: str = 'test', timeout: int = 30):
+                         environment: str = 'prod', timeout: int = 30):
         """
         Create KSeF client for certificate-based (XAdES) authentication.
 
@@ -689,7 +695,6 @@ class ksefClient:
         }
 
     def check_auth_status(self) -> dict:
-        """Check authorization status."""
         if not self.reference_number:
             raise ksefError.ksefError("No reference_number")
 
@@ -790,7 +795,7 @@ class ksefClient:
 
         return self._make_request('POST', endpoint, data=data, with_session=True)
 
-    def get_invoice_xml(self, ksef_number: str) -> str:
+    def get_invoice_xml(self, ksef_number: str) -> bytes:
         """
         Download invoice XML from KSeF.
 
@@ -798,7 +803,7 @@ class ksefClient:
             ksef_number: KSeF invoice number
 
         Returns:
-            Invoice XML as string
+            Invoice XML as raw bytes (preserving original encoding for QR hash)
         """
         if not self.access_token:
             raise ksefError.ksefError("No active session")
@@ -815,4 +820,4 @@ class ksefClient:
                 status_code=response.status_code
             )
 
-        return response.text
+        return response.content
