@@ -45,14 +45,14 @@ Subject1 => issued/sales, Subject2 => received/purchases, Subject1and2 => issued
 
 <br>
 
-> Certificate authentication (XAdES) to KSeF system - requires nip (Tax ID), cert, key, and password
+> Certificate authentication (XAdES) to **KSeF** system - requires **NIP** (Tax ID), cert, key, and password
 
 ```sh
 ksef-xml-download.exe --nip 1234567890 --cert cert.pem --key key.pem --password secret
 
 ksef-xml-download.exe --nip 1234567890 --cert cert.pem --key key.pem --password-file pass.txt
 ```
-> Token authentication to KSeF system - requires nip (Tax ID), token
+> Token authentication to **KSeF** system - requires **NIP** (Tax ID), token
 
 ```sh
 ksef-xml-download.exe --nip 1234567890 --token "your-ksef-token"
