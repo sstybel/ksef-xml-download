@@ -65,9 +65,13 @@ Examples:
     parser.add_argument('--output-dir', default=f".\\",
                         help='Directory to save output files (default: current directory)')   
     parser.add_argument('--download-xml', action='store_true',
-                        help='Download full XML for each invoice')
-    parser.add_argument('--xml-output-dir', default=f".\\",
-                        help='Directory to save XML files (default: current directory)')
+                        help='Download full KSeF XML for each invoice')
+    parser.add_argument('--xml-output-dir',
+                        help='Directory to save KSeF XML files for all types of invoice (issued/sales or/and received/purchases) (default: current directory)')
+    parser.add_argument('--xml-sub1-output-dir',
+                        help='Directory to save KSeF XML files for Subject1 - issued/sales (default: current directory)')
+    parser.add_argument('--xml-sub2-output-dir',
+                        help='Directory to save KSeF XML files for Subject2 - received/purchases (default: current directory)')
     parser.add_argument('--verbose', '-v', action='store_true',
                         help='Enable verbose logging')
     parser.add_argument('--help', '-h', action='store_true',
@@ -176,6 +180,19 @@ Examples:
         subject_type = args.subject_type
         subject_type_label = ksefMisc.ksefSubjectTypeLabels[subject_type]
 
+        if args.xml_output_dir:
+            xml_output_dir = str(args.xml_output_dir)
+        else:
+            xml_output_dir = f".\\"
+        if args.xml_sub1_output_dir:
+            xml_sub1_output_dir = str(args.xml_sub1_output_dir)
+        else:
+            xml_sub1_output_dir = xml_output_dir
+        if args.xml_sub2_output_dir:
+            xml_sub2_output_dir = str(args.xml_sub2_output_dir)
+        else:
+            xml_sub2_output_dir = xml_output_dir 
+
         print(f"\nDownloading invoices {subject_type_label}...")
         if date_from:
             print(f"Date range: {date_from} - {date_to or 'today'}")
@@ -209,7 +226,7 @@ Examples:
             invoicesData = {f"{subject_type}": invSubX}
 
         if args.ksef_state_dir:
-            invoicesData = ksefMisc.ksef_CheckState(state_dir=args.ksef_state_dir, xml_output_dir=args.xml_output_dir, invoices_dict=invoicesData)
+            invoicesData = ksefMisc.ksef_CheckState(state_dir=args.ksef_state_dir, xml_sub1_output_dir=xml_sub1_output_dir, xml_sub2_output_dir=xml_sub2_output_dir, invoices_dict=invoicesData)
 
         if args.output_dir:
             output_dir = str(args.output_dir)
@@ -220,9 +237,9 @@ Examples:
             output_dir = f".\\"
 
         if args.output == 'json':
-            ksefMisc.print_invoices_json(invoicesData, output_path=output_dir, xml_path=args.xml_output_dir)
+            ksefMisc.print_invoices_json(invoicesData, output_path=output_dir, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir)
         elif args.output == 'csv':
-            ksefMisc.print_invoices_csv(invoicesData, output_path=output_dir, xml_path=args.xml_output_dir)
+            ksefMisc.print_invoices_csv(invoicesData, output_path=output_dir, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir)
         else:
             ksefMisc.print_invoices_table(invoicesData, output_path=output_dir)
 
@@ -237,7 +254,12 @@ Examples:
             invoices = invoicesData[invoicesSub]
 
             if args.download_xml and invoices:
-                _xml_output_dir = args.xml_output_dir
+
+                if invoicesSub == "Subject1":
+                    xml_path = xml_sub1_output_dir
+                elif invoicesSub == "Subject2":
+                    xml_path = xml_sub2_output_dir
+                _xml_output_dir = xml_path
                 _xml_output_dir = str(_xml_output_dir).replace('/', f"\\")
                 _xml_output_dir = _xml_output_dir.replace(f"\\.\\", f".\\")
                 print(f"\nDownloading KSeF XML file(s) from {ksefMisc.ksefSubjectTypeLabels[invoicesSub]} to: {_xml_output_dir}")

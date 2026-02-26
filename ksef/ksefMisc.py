@@ -73,16 +73,12 @@ def print_invoices_table(invoices_dict: dict = {}, output_path=".\\"):
         tab_file.write("=" * 140 + "\n")
         tab_file.write(f"Total: {len(invoices)} invoice(s)\n")
 
-def print_invoices_csv(invoices_dict: dict = {}, output_path=".\\", xml_path=".\\"):
+def print_invoices_csv(invoices_dict: dict = {}, output_path=".\\", xml_sub1_output_path=".\\", xml_sub2_output_path=".\\"):
     csv_output_filename = create_filename("invoices-output-csv", path=output_path, prefix_filename="ksef", fileextension=".csv")  
 
     if not invoices_dict:
         print("No invoices found.")
         return
-
-    xml_output_dir = xml_path
-    xml_output_dir = str(xml_output_dir).replace('/', f"\\")
-    xml_output_dir = xml_output_dir.replace(f"\\.\\", f".\\")
 
     with open(csv_output_filename, 'w', encoding='windows-1250') as csv_file:
         csv_header = f"\"ksefSubjectType\";\"ksefNumber\";\"formSystemCode\";\"formSchemaVersion\";\"formValue\";\"invoiceNumber\";\"invoiceIssueDate\";\"invoiceCurrency\";\"invoiceType\";\"invoicingMode\";\"invoiceHash\";\"sellerNIP\";\"sellerName\";\"buyerIdType\";\"buyerIdValue\";\"buyerName\";\"netAmount\";\"vatAmount\";\"grossAmount\";\"qrCode\";\"fileName\"" 
@@ -94,6 +90,14 @@ def print_invoices_csv(invoices_dict: dict = {}, output_path=".\\", xml_path=".\
             for inv in invoices:
                 ksef_subtype = inv_dict
                 ksef_num = inv.get('ksefNumber', 'N/A')[:44]
+
+                if ksef_subtype == "Subject1":
+                    xml_path = xml_sub1_output_path
+                elif ksef_subtype == "Subject2":
+                    xml_path = xml_sub2_output_path
+                xml_output_dir = xml_path
+                xml_output_dir = str(xml_output_dir).replace('/', f"\\")
+                xml_output_dir = xml_output_dir.replace(f"\\.\\", f".\\")
 
                 form_code = inv.get('formCode', {})
                 form_scode = form_code.get('systemCode', 'N/A') if isinstance(form_code, dict) else 'N/A'
@@ -140,19 +144,23 @@ def print_invoices_csv(invoices_dict: dict = {}, output_path=".\\", xml_path=".\
                 print(csv_record.strip())
                 csv_file.write(csv_record.strip() + "\n")
 
-def print_invoices_json(invoices_dict: dict = {}, output_path=".\\", xml_path=".\\"):
+def print_invoices_json(invoices_dict: dict = {}, output_path=".\\", xml_sub1_output_path=".\\", xml_sub2_output_path=".\\"):
     _invoices = {}
     for subject_type, invoices in invoices_dict.items():
         _invoices[subject_type] = invoices.copy()
 
-    xml_output_dir = xml_path
-    xml_output_dir = str(xml_output_dir).replace('/', f"\\")
-    xml_output_dir = xml_output_dir.replace(f"\\.\\", f".\\")
-        
     for inv_sub in invoices_dict:
         inv = invoices_dict[inv_sub]
         inv_rec_num = 0
         for inv_rec in inv:
+            if inv_sub == "Subject1":
+                xml_path = xml_sub1_output_path
+            elif inv_sub == "Subject2":
+                xml_path = xml_sub2_output_path
+            xml_output_dir = xml_path
+            xml_output_dir = str(xml_output_dir).replace('/', f"\\")
+            xml_output_dir = xml_output_dir.replace(f"\\.\\", f".\\")
+            
             ksef_num = inv_rec.get('ksefNumber', 'N/A')[:44]
             inv_hash = inv_rec.get('invoiceHash', 'N/A')
             ksef_num_spl = ksef_num.split('-')
@@ -178,7 +186,7 @@ def print_invoices_json(invoices_dict: dict = {}, output_path=".\\", xml_path=".
     with open(json_output_filename, 'w', encoding='utf-8') as json_file:
         json.dump(_invoices, json_file, ensure_ascii=False, indent=4)
 
-def ksef_CheckState(state_dir = ".\\", xml_output_dir = ".\\", invoices_dict: dict = {}) -> dict:
+def ksef_CheckState(state_dir = ".\\", xml_sub1_output_dir = ".\\", xml_sub2_output_dir = ".\\", invoices_dict: dict = {}) -> dict:
 
     state_file_path = os.path.join(state_dir, 'ksef_state.json')
     state_file_path = state_file_path.replace('/', f"\\")
@@ -208,6 +216,10 @@ def ksef_CheckState(state_dir = ".\\", xml_output_dir = ".\\", invoices_dict: di
                     if (invHash == stateInvHash) and (idx >= 0):
                         del _invoices_dict[subject_type][idx]
                 else:
+                    if subject_type == "Subject1":
+                        xml_output_dir = xml_sub1_output_dir
+                    elif subject_type == "Subject2":
+                        xml_output_dir = xml_sub2_output_dir
                     safe_name = ksef_number.replace('/', '_').replace(f"\\", '_')
                     xmlfilepath = os.path.join(xml_output_dir, f"{safe_name}.xml")
                     xmlfilepath = xmlfilepath.replace('/', f"\\")
