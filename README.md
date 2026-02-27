@@ -10,6 +10,8 @@ The repository of this tool is based on a fork originating from:
 
 The application can list and download in **XML** format a set of available purchase invoices (received) as well as sales invoices (issued) in the **KSeF** system. In the application, you can specify the time interval within which invoices will be downloaded from the **KSeF** system. 
 
+Authentication to the **KSeF** system can be performed using authentication based on `certificates` issued in the **KSeF** system, as well as using a `token` issued in **KSeF**.
+
 Additionally, a status file (`ksef_state.json`) of downloaded documents (invoices) can be generated to avoid redundant downloading of documents that have already been downloaded. 
 
 The software can also download purchase (*Subject2*) and sales invoices (*Subject2*) with their storage locations separated into different locations (folders). In addition, the result file is generated in one of three formats (**JSON**, **TXT**, and **CSV**). 
