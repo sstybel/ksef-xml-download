@@ -8,7 +8,6 @@ The repository of this tool is based on a fork originating from:
 1. https://github.com/Pafkaja/ksef_faktury_list ([**@Pafkaja (PaFka)**](https://github.com/Pafkaja))
 2. https://github.com/CIRFMF/ksef-pdf-generator ([**@CIRF**](https://github.com/CIRFMF))
 
-
 The application can list and download in **XML** format a set of available purchase invoices (received) as well as sales invoices (issued) in the **KSeF** system. In the application, you can specify the time interval within which invoices will be downloaded from the **KSeF** system. 
 
 Additionally, a status file (`ksef_state.json`) of downloaded documents (invoices) can be generated to avoid redundant downloading of documents that have already been downloaded. 
@@ -18,6 +17,8 @@ The software can also download purchase (*Subject2*) and sales invoices (*Subjec
 The output file in **JSON** format can be used by the [**KSeF PDF Generator**](https://github.com/sstybel/ksef-pdf-generator) tool to generate a visualization of invoices in **PDF** format, based on invoices downloaded in **XML** format from the **KSeF** system. This solution simplifies the process of converting invoices to **PDF** format, as the output file contains the location of the **XML** invoice files. 
 
 Be sure to check out and download this tool as well: [**KSeF PDF Generator**](https://github.com/sstybel/ksef-pdf-generator)
+
+&nbsp;
 
 ![Example Screen-Shot ](https://github.com/sstybel/ksef-xml-download/blob/main/images/screen01.png)
 
