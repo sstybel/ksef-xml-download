@@ -9,7 +9,7 @@ from ksef import ksefMisc
 from ksef import ksefError
 from ksef import ksefClient
 
-str_version = "1.00"
+str_version = "1.10"
 str_app_name ="KSeF XML Invoices Downloader - ver. " + str_version
 str_author = "Copyright (c) 2025 - 2026 by Sebastian Stybel, www.BONO-IT.pl"
 
@@ -63,7 +63,11 @@ Examples:
     parser.add_argument('--output', choices=['json', 'csv', 'table'], default='json',
                         help='Output format of results to display and save to file under the name according to the pattern ksef_invoices-output-[json | csv | txt]_YYYYMMDDhhmmss.[json | csv | txt] (default output format: json)')
     parser.add_argument('--output-dir', default=f".\\",
-                        help='Directory to save output files (default: current directory)')   
+                        help='Directory to save output files (default: current directory)')
+    parser.add_argument('--output-filename',
+                        help='File name of the output file with data from the KSeF system (default name according to pattern: ksef_invoices-output-[json | csv | txt]_YYYYMMDDhhmmss.[json | csv | txt])')    
+    parser.add_argument('--output-append', action='store_true',
+                        help='Appending output data to an existing output file')
     parser.add_argument('--download-xml', action='store_true',
                         help='Download full KSeF XML for each invoice')
     parser.add_argument('--xml-output-dir',
@@ -180,6 +184,15 @@ Examples:
         subject_type = args.subject_type
         subject_type_label = ksefMisc.ksefSubjectTypeLabels[subject_type]
 
+        if args.output_filename:
+            output_filename = str(args.output_filename).lower().strip()
+        else:
+            output_filename = ""
+
+        output_append = False
+        if args.output_append:
+            output_append = True
+
         if args.xml_output_dir:
             xml_output_dir = str(args.xml_output_dir)
         else:
@@ -237,9 +250,14 @@ Examples:
             output_dir = f".\\"
 
         if args.output == 'json':
-            ksefMisc.print_invoices_json(invoicesData, output_path=output_dir, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir)
+            if output_append:
+                json_output_filename = ksefMisc.create_filename_with_path(output_filename, path=output_dir)
+                if os.path.exists(json_output_filename):
+                    invoicesData = ksefMisc.ksef_InvoicesAppend(invoices_dict=invoicesData,  json_output_filename= json_output_filename)
+
+            ksefMisc.print_invoices_json(invoicesData, output_path=output_dir, output_filename=output_filename, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir)
         elif args.output == 'csv':
-            ksefMisc.print_invoices_csv(invoicesData, output_path=output_dir, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir)
+            ksefMisc.print_invoices_csv(invoicesData, output_path=output_dir, output_filename=output_filename, output_append=output_append, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir)
         else:
             ksefMisc.print_invoices_table(invoicesData, output_path=output_dir)
 
@@ -272,9 +290,8 @@ Examples:
                             xml_raw = get_xml_cached(ksef_number)
 
                             safe_name = ksef_number.replace('/', '_').replace(f"\\", '_')
-                            filepath = os.path.join(_xml_output_dir, f"{safe_name}.xml")
-                            filepath = filepath.replace('/', f"\\")
-                            filepath = filepath.replace(f"\\.\\", f".\\")
+                            filepath = ksefMisc.create_filename_with_path(f"{safe_name}.xml", path=_xml_output_dir)
+
                             with open(filepath, 'wb') as f:
                                 f.write(xml_raw)
                             print(f"  Downloaded: {filepath}")
