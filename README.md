@@ -26,7 +26,7 @@ Be sure to check out and download this tool as well: [**KSeF PDF Generator**](ht
 
 ## Syntax of the `ksef-xml-download.exe`
 
-**Usage:** `ksef-xml-download.exe` `--nip NIP` [`--cert CERT`] [`--key KEY`] [`--password PASSWORD`] [`--password-file PASSWORD_FILE`] [`--token TOKEN`] [`--token-file TOKEN_FILE`] [`--env {prod | test | demo}`] [`--date-from DATE_FROM`] [`--date-to DATE_TO`] [`--subject-type {Subject1 | Subject2 | Subject1and2}`] [`--ksef-state-dir KSEF_STATE_DIR`] [`--output {json | csv | table}`] [`--output-dir OUTPUT_DIR`] [`--download-xml`] [`--xml-output-dir XML_OUTPUT_DIR`] [`--xml-sub1-output-dir XML_SUB1_OUTPUT_DIR`] [`--xml-sub2-output-dir XML_SUB2_OUTPUT_DIR`] [`--verbose`] [`--help`]
+**Usage:** `ksef-xml-download.exe` `--nip NIP` [`--cert CERT`] [`--key KEY`] [`--password PASSWORD`] [`--password-file PASSWORD_FILE`] [`--token TOKEN`] [`--token-file TOKEN_FILE`] [`--env {prod | test | demo}`] [`--date-from DATE_FROM`] [`--date-to DATE_TO`] [`--subject-type {Subject1 | Subject2 | Subject1and2}`] [`--ksef-state-dir KSEF_STATE_DIR`] [`--output {json | csv | table}`] [`--output-dir OUTPUT_DIR`] [`--output-filename OUTPUT_FILENAME`] [`--output-append`] [`--download-xml`] [`--xml-output-dir XML_OUTPUT_DIR`] [`--xml-sub1-output-dir XML_SUB1_OUTPUT_DIR`] [`--xml-sub2-output-dir XML_SUB2_OUTPUT_DIR`] [`--verbose`] [`--help`]
 
 **Options:**
 *  `--nip NIP` - **NIP** (Tax ID) of the entity (required for **KSeF** queries)
@@ -38,6 +38,8 @@ Subject1 => issued/sales, Subject2 => received/purchases, Subject1and2 => issued
 * `--ksef-state-dir KSEF_STATE_DIR` - Path to the state file (ksef_state.json) for downloading invoices from the **KSeF** system. If not provided, the state will be stored in the current directory.
 * `--output {json | csv | table}` - Output format of results to display and save to file under the name according to the pattern `ksef_invoices-output-[json | csv | txt]_YYYYMMDDhhmmss.[json | csv | txt]` (default output format: `json`)
 * `--output-dir OUTPUT_DIR` - Directory to save output files (default: current directory)
+* `--output-filename OUTPUT_FILENAME` - File name of the output file with data from the **KSeF** system (default name according to pattern: `ksef_invoices-output-[json | csv | txt]_YYYYMMDDhhmmss.[json | csv | txt]`)
+* `--output-append` - Appending output data to an existing output file
 * `--download-xml` - Download full KSeF **XML** for each invoice
 * `--xml-output-dir XML_OUTPUT_DIR` - Directory to save KSeF **XML** files for all types of invoice (issued/sales or/and received/purchases) (default: current directory)
 * `--xml-sub1-output-dir XML_SUB1_OUTPUT_DIR` - Directory to save KSeF **XML** files for **Subject1 - issued/sales** (default: current directory)
