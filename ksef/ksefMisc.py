@@ -1,6 +1,10 @@
 import os
 import json
 import datetime
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from _typeshed import SupportsWrite
 
 ksefSubjectTypeLabels = {
     "Subject1and2": "issued (sales) and received (purchases) - Subject1 and Subject2",
@@ -8,13 +12,19 @@ ksefSubjectTypeLabels = {
     "Subject2": "received (purchases) - Subject2"
 }
 
-def print_line():
-    print("--------------------------------------------------------------------\n")
+def print_consol(mess: str, file: SupportsWrite[str] | None = None, is_quiet=False):
+    if (not is_quiet):
+        print(mess, file=file)
 
-def print_app_title(app_name, app_author):
-    print(f"\n{app_name}")
-    print(f"{app_author}")
-    print_line()
+def print_line(is_quiet=False):
+    if (not is_quiet):
+        print("--------------------------------------------------------------------\n")
+
+def print_app_title(app_name, app_author, is_quiet=False):
+    if (not is_quiet):
+        print(f"\n{app_name}")
+        print(f"{app_author}")
+    print_line(is_quiet=is_quiet)
 
 def format_amount(amount) -> str:
     if amount is None:
@@ -42,17 +52,17 @@ def create_filename(filename, path=".\\", prefix_filename="ksef", fileextension=
 
     return filepath
 
-def print_invoices_table(invoices_dict: dict = {}, output_path=".\\"):
+def print_invoices_table(invoices_dict: dict = {}, output_path=".\\", is_quiet=False):
     tab_output_filename = create_filename("invoices-output-table", path=output_path, prefix_filename="ksef", fileextension=".txt")  
 
     if not invoices_dict:
-        print("No invoices found.")
+        print_consol("No invoices found.", is_quiet=is_quiet)
         return
 
     with open(tab_output_filename, 'w', encoding='utf-8') as tab_file:
-        print("\n" + "=" * 140)
-        print(f"{'KSeF subject':<20} {'KSeF number':<45} {'Invoice number':<20} {'Date':<12} {'Sales tax ID (NIP)':<12} {'Gross amount':>15}")
-        print("=" * 140)
+        print_consol("\n" + "=" * 140, is_quiet=is_quiet)
+        print_consol(f"{'KSeF subject':<20} {'KSeF number':<45} {'Invoice number':<20} {'Date':<12} {'Sales tax ID (NIP)':<12} {'Gross amount':>15}", is_quiet=is_quiet)
+        print_consol("=" * 140, is_quiet=is_quiet)
         tab_file.write("=" * 140 + "\n")
         tab_file.write(f"{'KSeF subject':<20} {'KSeF number':<45} {'Invoice number':<20} {'Date':<12} {'Sales tax ID (NIP)':<12} {'Gross amount':>15}\n")
         tab_file.write("=" * 140 + "\n")
@@ -70,22 +80,22 @@ def print_invoices_table(invoices_dict: dict = {}, output_path=".\\"):
 
                 gross = format_amount(inv.get('grossAmount'))
 
-                print(f"{ksef_subtype:<20} {ksef_num:<45} {inv_num:<20} {inv_date:<12} {seller_nip:<12} {gross:>15}")
+                print_consol(f"{ksef_subtype:<20} {ksef_num:<45} {inv_num:<20} {inv_date:<12} {seller_nip:<12} {gross:>15}", is_quiet=is_quiet)
                 tab_file.write(f"{ksef_subtype:<20} {ksef_num:<45} {inv_num:<20} {inv_date:<12} {seller_nip:<12} {gross:>15}\n")
 
-        print("=" * 140)
-        print(f"Total: {len(invoices)} invoice(s)")
+        print_consol("=" * 140, is_quiet=is_quiet)
+        print_consol(f"Total: {len(invoices)} invoice(s)", is_quiet=is_quiet)
         tab_file.write("=" * 140 + "\n")
         tab_file.write(f"Total: {len(invoices)} invoice(s)\n")
 
-def print_invoices_csv(invoices_dict: dict = {}, output_path=".\\", output_filename="", output_append=False, xml_sub1_output_path=".\\", xml_sub2_output_path=".\\"):
+def print_invoices_csv(invoices_dict: dict = {}, output_path=".\\", output_filename="", output_append=False, xml_sub1_output_path=".\\", xml_sub2_output_path=".\\", is_quiet=False):
     if (output_filename == ""):
         csv_output_filename = create_filename("invoices-output-csv", path=output_path, prefix_filename="ksef", fileextension=".csv")
     else:
         csv_output_filename = create_filename_with_path(output_filename, path=output_path)
 
     if not invoices_dict:
-        print("No invoices found.")
+        print_consol("No invoices found.", is_quiet=is_quiet)
         return
     
     write_method = 'w'
@@ -94,12 +104,12 @@ def print_invoices_csv(invoices_dict: dict = {}, output_path=".\\", output_filen
             write_method = 'a'
             with open(csv_output_filename, 'r') as csv_file_show:
                 for csv_file_line in csv_file_show:
-                    print(csv_file_line.strip())
+                    print_consol(csv_file_line.strip(), is_quiet=is_quiet)
 
     with open(csv_output_filename, write_method, encoding='windows-1250') as csv_file:
         if write_method == 'w':
             csv_header = f"\"ksefSubjectType\";\"ksefNumber\";\"formSystemCode\";\"formSchemaVersion\";\"formValue\";\"invoiceNumber\";\"invoiceIssueDate\";\"invoiceCurrency\";\"invoiceType\";\"invoicingMode\";\"invoiceHash\";\"sellerNIP\";\"sellerName\";\"buyerIdType\";\"buyerIdValue\";\"buyerName\";\"netAmount\";\"vatAmount\";\"grossAmount\";\"qrCode\";\"fileName\"" 
-            print(csv_header)
+            print_consol(csv_header, is_quiet=is_quiet)
             csv_file.write(csv_header + "\n")
 
         for inv_dict in invoices_dict:
@@ -156,10 +166,10 @@ def print_invoices_csv(invoices_dict: dict = {}, output_path=".\\", output_filen
                 csv_record = ""
                 csv_record = csv_record + f"\"{ksef_subtype}\";\"{ksef_num}\";\"{form_scode}\";\"{form_ver}\";\"{form_val}\";\"{inv_num}\";\"{inv_date}\";\"{inv_curr}\";\"{inv_type}\";\"{inv_mode}\";\"{inv_hash}\";\"{seller_nip}\";\"{seller_name}\";\"{buyer_type}\";\"{buyer_val}\";\"{buyer_name}\";\"{net}\";\"{vat}\";\"{gross}\";\"{qrCode}\";\"{fileName}\""
             
-                print(csv_record.strip())
+                print_consol(csv_record.strip(), is_quiet=is_quiet)
                 csv_file.write(csv_record.strip() + "\n")
 
-def print_invoices_json(invoices_dict: dict = {}, output_path=".\\", output_filename="", xml_sub1_output_path=".\\", xml_sub2_output_path=".\\"):
+def print_invoices_json(invoices_dict: dict = {}, output_path=".\\", output_filename="", xml_sub1_output_path=".\\", xml_sub2_output_path=".\\", is_quiet=False):
     _invoices = {}
     for subject_type, invoices in invoices_dict.items():
         _invoices[subject_type] = invoices.copy()
@@ -193,7 +203,7 @@ def print_invoices_json(invoices_dict: dict = {}, output_path=".\\", output_file
             _invoices[inv_sub][inv_rec_num].update({"fileName": fileName})
             inv_rec_num += 1
 
-    print(json.dumps(_invoices, indent=4, ensure_ascii=False, default=str))
+    print_consol(json.dumps(_invoices, indent=4, ensure_ascii=False, default=str), is_quiet=is_quiet)
 
     if (output_filename == ""):
         json_output_filename = create_filename("invoices-output-json", path=output_path, prefix_filename="ksef", fileextension=".json")  
@@ -203,7 +213,7 @@ def print_invoices_json(invoices_dict: dict = {}, output_path=".\\", output_file
     with open(json_output_filename, 'w', encoding='utf-8') as json_file:
         json.dump(_invoices, json_file, ensure_ascii=False, indent=4)
 
-def ksef_CheckState(state_dir = ".\\", xml_sub1_output_dir = ".\\", xml_sub2_output_dir = ".\\", invoices_dict: dict = {}) -> dict:
+def ksef_CheckState(state_dir = ".\\", xml_sub1_output_dir = ".\\", xml_sub2_output_dir = ".\\", invoices_dict: dict = {}, is_quiet=False) -> dict:
 
     state_file_path = create_filename_with_path('ksef_state.json', path=state_dir)
 
@@ -214,9 +224,9 @@ def ksef_CheckState(state_dir = ".\\", xml_sub1_output_dir = ".\\", xml_sub2_out
     try:
         with open(state_file_path, 'r', encoding='utf-8') as state_file:
             state_data = json.load(state_file)
-        print(f"KSeF state loaded from: {state_file_path}")
+        print_consol(f"KSeF state loaded from: {state_file_path}", is_quiet=is_quiet)
     except FileNotFoundError:
-        print(f"No existing KSeF state found at: {state_file_path}. A new state file will be created at: {state_file_path}")
+        print_consol(f"No existing KSeF state found at: {state_file_path}. A new state file will be created at: {state_file_path}", is_quiet=is_quiet)
         state_data = {}
 
     for subject_type, invoices in invoices_dict.items():
@@ -244,7 +254,7 @@ def ksef_CheckState(state_dir = ".\\", xml_sub1_output_dir = ".\\", xml_sub2_out
     os.makedirs(state_dir, exist_ok=True)
     with open(state_file_path, 'w', encoding='utf-8') as state_file:
         json.dump(state_data, state_file, ensure_ascii=False, indent=4)
-    print(f"KSeF state saved to: {state_file_path}")
+    print_consol(f"KSeF state saved to: {state_file_path}", is_quiet=is_quiet)
 
     return _invoices_dict
 

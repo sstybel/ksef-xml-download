@@ -9,13 +9,15 @@ from ksef import ksefMisc
 from ksef import ksefError
 from ksef import ksefClient
 
-str_version = "1.10"
+str_version = "1.20"
 str_app_name ="KSeF XML Invoices Downloader - ver. " + str_version
 str_author = "Copyright (c) 2025 - 2026 by Sebastian Stybel, www.BONO-IT.pl"
 
 logger = logging.getLogger(__name__)
 
 def main():
+    is_q = False
+
     parser = argparse.ArgumentParser(
         description='Download invoices from National e-Invoice System - KSeF (Krajowy System e-Faktur)',
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -76,6 +78,8 @@ Examples:
                         help='Directory to save KSeF XML files for Subject1 - issued/sales (default: current directory)')
     parser.add_argument('--xml-sub2-output-dir',
                         help='Directory to save KSeF XML files for Subject2 - received/purchases (default: current directory)')
+    parser.add_argument('--quiet', '-q', action='store_true',
+                        help='Enable quiet mode, does not display messages on the screen')
     parser.add_argument('--verbose', '-v', action='store_true',
                         help='Enable verbose logging')
     parser.add_argument('--help', '-h', action='store_true',
@@ -87,6 +91,9 @@ Examples:
         parser.print_help()
         sys.exit(0)
 
+    if args.quiet:
+        is_q = True
+
     log_level = logging.DEBUG if args.verbose else logging.WARNING
     logging.basicConfig(
         level=log_level,
@@ -96,18 +103,18 @@ Examples:
     use_token_auth = args.token or args.token_file
     use_cert_auth = args.cert or args.key
 
-    ksefMisc.print_app_title(str_app_name, str_author)
+    ksefMisc.print_app_title(app_name=str_app_name, app_author=str_author, is_quiet=is_q)
 
     if not args.nip:
-        print("ERR: --nip (Tax ID) is required for KSeF system queries", file=sys.stderr)
+        ksefMisc.print_consol("ERR: --nip (Tax ID) is required for KSeF system queries", file=sys.stderr, is_quiet=is_q)
         sys.exit(1)
 
     if not use_token_auth and not use_cert_auth:
-        print("ERR: You must provide a token (--token/--token-file) or certificate (--cert/--key).", file=sys.stderr)
+        ksefMisc.print_consol("ERR: You must provide a token (--token/--token-file) or certificate (--cert/--key).", file=sys.stderr, is_quiet=is_q)
         sys.exit(1)
 
     if use_token_auth and use_cert_auth:
-        print("ERR: You cannot use both a token and a certificate at the same time. Choose one method.", file=sys.stderr)
+        ksefMisc.print_consol("ERR: You cannot use both a token and a certificate at the same time. Choose one method.", file=sys.stderr, is_quiet=is_q)
         sys.exit(1)
 
     token = None
@@ -115,12 +122,12 @@ Examples:
         token = args.token
         if not token and args.token_file:
             if not os.path.exists(args.token_file):
-                print(f"ERR: Token file not found: {args.token_file}", file=sys.stderr)
+                ksefMisc.print_consol(f"ERR: Token file not found: {args.token_file}", file=sys.stderr, is_quiet=is_q)
                 sys.exit(1)
             with open(args.token_file, 'r') as f:
                 token = f.read().strip()
         if not token:
-            print("ERR: Token is empty", file=sys.stderr)
+            ksefMisc.print_consol("ERR: Token is empty", file=sys.stderr, is_quiet=is_q)
             sys.exit(1)
 
     password = None
@@ -128,16 +135,16 @@ Examples:
         password = args.password
         if not password and args.password_file:
             if not os.path.exists(args.password_file):
-                print(f"ERR: Password file not found: {args.password_file}", file=sys.stderr)
+                ksefMisc.print_consol(f"ERR: Password file not found: {args.password_file}", file=sys.stderr, is_quiet=is_q)
                 sys.exit(1)
             with open(args.password_file, 'r') as f:
                 password = f.read().strip()
 
         if not args.cert or not os.path.exists(args.cert):
-            print(f"ERR: Certificate file not found: {args.cert}", file=sys.stderr)
+            ksefMisc.print_consol(f"ERR: Certificate file not found: {args.cert}", file=sys.stderr, is_quiet=is_q)
             sys.exit(1)
         if not args.key or not os.path.exists(args.key):
-            print(f"ERR: Private key file not found: {args.key}", file=sys.stderr)
+            ksefMisc.print_consol(f"ERR: Private key file not found: {args.key}", file=sys.stderr, is_quiet=is_q)
             sys.exit(1)
 
     date_from = None
@@ -146,13 +153,13 @@ Examples:
         try:
             date_from = datetime.datetime.strptime(args.date_from, '%Y-%m-%d').date()
         except ValueError:
-            print(f"ERR: Invalid date format for --date-from: {args.date_from}", file=sys.stderr)
+            ksefMisc.print_consol(f"ERR: Invalid date format for --date-from: {args.date_from}", file=sys.stderr, is_quiet=is_q)
             sys.exit(1)
     if args.date_to:
         try:
             date_to = datetime.datetime.strptime(args.date_to, '%Y-%m-%d').date()
         except ValueError:
-            print(f"ERR: Invalid date format for --date-to: {args.date_to}", file=sys.stderr)
+            ksefMisc.print_consol(f"ERR: Invalid date format for --date-to: {args.date_to}", file=sys.stderr, is_quiet=is_q)
             sys.exit(1)
 
     try:
@@ -171,15 +178,15 @@ Examples:
             )
             auth_method = "certificate (XAdES)"
 
-        print(f"Connecting to KSeF system (environment: {args.env})...")
-        print(f"NIP (Tax ID): {args.nip}")
-        print(f"Authentication method: {auth_method}")
+        ksefMisc.print_consol(f"Connecting to KSeF system (environment: {args.env})...", is_quiet=is_q)
+        ksefMisc.print_consol(f"NIP (Tax ID): {args.nip}", is_quiet=is_q)
+        ksefMisc.print_consol(f"Authentication method: {auth_method}", is_quiet=is_q)
 
         if use_token_auth:
             session_info = client.init_session_token(args.nip)
         else:
             session_info = client.init_session_xades(args.nip)
-        print(f"Session initialized. Reference number: {session_info['reference_number']}")
+        ksefMisc.print_consol(f"Session initialized. Reference number: {session_info['reference_number']}", is_quiet=is_q)
 
         subject_type = args.subject_type
         subject_type_label = ksefMisc.ksefSubjectTypeLabels[subject_type]
@@ -206,9 +213,9 @@ Examples:
         else:
             xml_sub2_output_dir = xml_output_dir 
 
-        print(f"\nDownloading invoices {subject_type_label}...")
+        ksefMisc.print_consol(f"\nDownloading invoices {subject_type_label}...", is_quiet=is_q)
         if date_from:
-            print(f"Date range: {date_from} - {date_to or 'today'}")
+            ksefMisc.print_consol(f"Date range: {date_from} - {date_to or 'today'}", is_quiet=is_q)
 
         if (subject_type == "Subject1and2"):
             result = client.query_invoices(
@@ -239,7 +246,7 @@ Examples:
             invoicesData = {f"{subject_type}": invSubX}
 
         if args.ksef_state_dir:
-            invoicesData = ksefMisc.ksef_CheckState(state_dir=args.ksef_state_dir, xml_sub1_output_dir=xml_sub1_output_dir, xml_sub2_output_dir=xml_sub2_output_dir, invoices_dict=invoicesData)
+            invoicesData = ksefMisc.ksef_CheckState(state_dir=args.ksef_state_dir, xml_sub1_output_dir=xml_sub1_output_dir, xml_sub2_output_dir=xml_sub2_output_dir, invoices_dict=invoicesData, is_quiet=is_q)
 
         if args.output_dir:
             output_dir = str(args.output_dir)
@@ -253,13 +260,13 @@ Examples:
             if output_append:
                 json_output_filename = ksefMisc.create_filename_with_path(output_filename, path=output_dir)
                 if os.path.exists(json_output_filename):
-                    invoicesData = ksefMisc.ksef_InvoicesAppend(invoices_dict=invoicesData,  json_output_filename= json_output_filename)
+                    invoicesData = ksefMisc.ksef_InvoicesAppend(invoices_dict=invoicesData,  json_output_filename= json_output_filename, is_quiet=is_q)
 
-            ksefMisc.print_invoices_json(invoicesData, output_path=output_dir, output_filename=output_filename, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir)
+            ksefMisc.print_invoices_json(invoicesData, output_path=output_dir, output_filename=output_filename, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir, is_quiet=is_q)
         elif args.output == 'csv':
-            ksefMisc.print_invoices_csv(invoicesData, output_path=output_dir, output_filename=output_filename, output_append=output_append, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir)
+            ksefMisc.print_invoices_csv(invoicesData, output_path=output_dir, output_filename=output_filename, output_append=output_append, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir, is_quiet=is_q)
         else:
-            ksefMisc.print_invoices_table(invoicesData, output_path=output_dir)
+            ksefMisc.print_invoices_table(invoicesData, output_path=output_dir, is_quiet=is_q)
 
         xml_cache = {}
 
@@ -280,7 +287,7 @@ Examples:
                 _xml_output_dir = xml_path
                 _xml_output_dir = str(_xml_output_dir).replace('/', f"\\")
                 _xml_output_dir = _xml_output_dir.replace(f"\\.\\", f".\\")
-                print(f"\nDownloading KSeF XML file(s) from {ksefMisc.ksefSubjectTypeLabels[invoicesSub]} to: {_xml_output_dir}")
+                ksefMisc.print_consol(f"\nDownloading KSeF XML file(s) from {ksefMisc.ksefSubjectTypeLabels[invoicesSub]} to: {_xml_output_dir}", is_quiet=is_q)
                 os.makedirs(_xml_output_dir, exist_ok=True)
 
                 for inv in invoices:
@@ -294,21 +301,21 @@ Examples:
 
                             with open(filepath, 'wb') as f:
                                 f.write(xml_raw)
-                            print(f"  Downloaded: {filepath}")
+                            ksefMisc.print_consol(f"  Downloaded: {filepath}", is_quiet=is_q)
                         except ksefError.ksefError as e:
-                            print(f"  Error downloading {ksef_number}: {e.message}", file=sys.stderr)
+                            ksefMisc.print_consol(f"  Error downloading {ksef_number}: {e.message}", file=sys.stderr, is_quiet=is_q)
 
-        print("\nEnding session...")
+        ksefMisc.print_consol("\nEnding session...", is_quiet=is_q)
         client.terminate_session()
-        print("Session ended.")
+        ksefMisc.print_consol("Session ended.", is_quiet=is_q)
 
     except ksefError.ksefError as e:
-        print(f"\nERR-KSeF: {e.message}", file=sys.stderr)
+        ksefMisc.print_consol(f"\nERR-KSeF: {e.message}", file=sys.stderr, is_quiet=is_q)
         if e.response_data:
-            print(f"ERR-KSeF-Details: {json.dumps(e.response_data, indent=2)}", file=sys.stderr)
+            ksefMisc.print_consol(f"ERR-KSeF-Details: {json.dumps(e.response_data, indent=2)}", file=sys.stderr, is_quiet=is_q)
         sys.exit(1)
     except Exception as e:
-        print(f"\nERR-Unexpected: {e}", file=sys.stderr)
+        ksefMisc.print_consol(f"\nERR-Unexpected: {e}", file=sys.stderr, is_quiet=is_q)
         if args.verbose:
             import traceback
             traceback.print_exc()

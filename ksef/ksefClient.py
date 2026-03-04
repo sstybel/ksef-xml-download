@@ -17,6 +17,7 @@ from cryptography.hazmat.primitives.asymmetric.padding import OAEP, MGF1
 from cryptography.hazmat.backends import default_backend
 
 from ksef import ksefError
+from ksef import ksefMisc
 
 KSEF_URLS = {
     'test': 'https://api-test.ksef.mf.gov.pl/v2',

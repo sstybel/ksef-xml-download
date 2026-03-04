@@ -18,6 +18,9 @@ The software can also download purchase (*Subject2*) and sales invoices (*Subjec
 
 The output file in **JSON** format can be used by the [**KSeF PDF Generator**](https://github.com/sstybel/ksef-pdf-generator) tool to generate a visualization of invoices in **PDF** format, based on invoices downloaded in **XML** format from the **KSeF** system. This solution simplifies the process of converting invoices to **PDF** format, as the output file contains the location of the **XML** invoice files. 
 
+Since version [**1.20 releases**](https://github.com/sstybel/ksef-xml-download/releases/tag/1.20), one parameter have been added:
+* Silent mode (default: disabled)
+
 Be sure to check out and download this tool as well: [**KSeF PDF Generator**](https://github.com/sstybel/ksef-pdf-generator)
 
 &nbsp;
@@ -26,7 +29,7 @@ Be sure to check out and download this tool as well: [**KSeF PDF Generator**](ht
 
 ## Syntax of the `ksef-xml-download.exe`
 
-**Usage:** `ksef-xml-download.exe` `--nip NIP` [`--cert CERT`] [`--key KEY`] [`--password PASSWORD`] [`--password-file PASSWORD_FILE`] [`--token TOKEN`] [`--token-file TOKEN_FILE`] [`--env {prod | test | demo}`] [`--date-from DATE_FROM`] [`--date-to DATE_TO`] [`--subject-type {Subject1 | Subject2 | Subject1and2}`] [`--ksef-state-dir KSEF_STATE_DIR`] [`--output {json | csv | table}`] [`--output-dir OUTPUT_DIR`] [`--output-filename OUTPUT_FILENAME`] [`--output-append`] [`--download-xml`] [`--xml-output-dir XML_OUTPUT_DIR`] [`--xml-sub1-output-dir XML_SUB1_OUTPUT_DIR`] [`--xml-sub2-output-dir XML_SUB2_OUTPUT_DIR`] [`--verbose`] [`--help`]
+**Usage:** `ksef-xml-download.exe` `--nip NIP` [`--cert CERT`] [`--key KEY`] [`--password PASSWORD`] [`--password-file PASSWORD_FILE`] [`--token TOKEN`] [`--token-file TOKEN_FILE`] [`--env {prod | test | demo}`] [`--date-from DATE_FROM`] [`--date-to DATE_TO`] [`--subject-type {Subject1 | Subject2 | Subject1and2}`] [`--ksef-state-dir KSEF_STATE_DIR`] [`--output {json | csv | table}`] [`--output-dir OUTPUT_DIR`] [`--output-filename OUTPUT_FILENAME`] [`--output-append`] [`--download-xml`] [`--xml-output-dir XML_OUTPUT_DIR`] [`--xml-sub1-output-dir XML_SUB1_OUTPUT_DIR`] [`--xml-sub2-output-dir XML_SUB2_OUTPUT_DIR`] [--quiet] [`--verbose`] [`--help`]
 
 **Options:**
 *  `--nip NIP` - **NIP** (Tax ID) of the entity (required for **KSeF** queries)
@@ -44,6 +47,7 @@ Subject1 => issued/sales, Subject2 => received/purchases, Subject1and2 => issued
 * `--xml-output-dir XML_OUTPUT_DIR` - Directory to save KSeF **XML** files for all types of invoice (issued/sales or/and received/purchases) (default: current directory)
 * `--xml-sub1-output-dir XML_SUB1_OUTPUT_DIR` - Directory to save KSeF **XML** files for **Subject1 - issued/sales** (default: current directory)
 * `--xml-sub2-output-dir XML_SUB2_OUTPUT_DIR` - Directory to save KSeF **XML** files for **Subject2 - received/purchases** (default: current directory)
+* `--quiet`, `-q` - Enable quiet mode, does not display messages on the screen
 * `--verbose`, `-v` - Enable verbose logging
 * `--help`, `-h` - Show this help message and exit
 
