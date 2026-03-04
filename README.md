@@ -29,7 +29,7 @@ Be sure to check out and download this tool as well: [**KSeF PDF Generator**](ht
 
 ## Syntax of the `ksef-xml-download.exe`
 
-**Usage:** `ksef-xml-download.exe` `--nip NIP` [`--cert CERT`] [`--key KEY`] [`--password PASSWORD`] [`--password-file PASSWORD_FILE`] [`--token TOKEN`] [`--token-file TOKEN_FILE`] [`--env {prod | test | demo}`] [`--date-from DATE_FROM`] [`--date-to DATE_TO`] [`--subject-type {Subject1 | Subject2 | Subject1and2}`] [`--ksef-state-dir KSEF_STATE_DIR`] [`--output {json | csv | table}`] [`--output-dir OUTPUT_DIR`] [`--output-filename OUTPUT_FILENAME`] [`--output-append`] [`--download-xml`] [`--xml-output-dir XML_OUTPUT_DIR`] [`--xml-sub1-output-dir XML_SUB1_OUTPUT_DIR`] [`--xml-sub2-output-dir XML_SUB2_OUTPUT_DIR`] [--quiet] [`--verbose`] [`--help`]
+**Usage:** `ksef-xml-download.exe` `--nip NIP` [`--cert CERT`] [`--key KEY`] [`--password PASSWORD`] [`--password-file PASSWORD_FILE`] [`--token TOKEN`] [`--token-file TOKEN_FILE`] [`--env {prod | test | demo}`] [`--date-from DATE_FROM`] [`--date-to DATE_TO`] [`--subject-type {Subject1 | Subject2 | Subject1and2}`] [`--ksef-state-dir KSEF_STATE_DIR`] [`--output {json | csv | table}`] [`--output-dir OUTPUT_DIR`] [`--output-filename OUTPUT_FILENAME`] [`--output-append`] [`--download-xml`] [`--xml-output-dir XML_OUTPUT_DIR`] [`--xml-sub1-output-dir XML_SUB1_OUTPUT_DIR`] [`--xml-sub2-output-dir XML_SUB2_OUTPUT_DIR`] [`--quiet`] [`--verbose`] [`--help`]
 
 **Options:**
 *  `--nip NIP` - **NIP** (Tax ID) of the entity (required for **KSeF** queries)
