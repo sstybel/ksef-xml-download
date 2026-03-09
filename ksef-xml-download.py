@@ -265,28 +265,8 @@ Examples:
             output_dir = f".\\"
 
         if args.output == 'json':
-            if output_append:
-                if (output_filename == ""):
-                    json_output_filename = ksefMisc.create_filename("invoices-output-json", path=output_dir, prefix_filename="ksef", fileextension=".json")  
-                else:
-                    json_output_filename = ksefMisc.create_filename_with_path(output_filename, path=output_dir)
-                if os.path.exists(json_output_filename):
-                    invoicesDataCount = 0
-                    invoicesData, invoicesDataCount = ksefMisc.ksef_InvoicesAppendJSON(invoices_dict=invoicesData,  json_output_filename=json_output_filename)
-
-            if invoicesDataCount > 0:
-                ksefMisc.print_invoices_json(invoicesData, output_path=output_dir, output_filename=output_filename, output_append=output_append, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir, is_quiet=is_q)
+            ksefMisc.print_invoices_json(invoicesData, output_path=output_dir, output_filename=output_filename, output_append=output_append, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir, is_quiet=is_q)
         elif args.output == 'csv':
-            if output_append:
-                if (output_filename == ""):
-                    csv_output_filename = ksefMisc.create_filename("invoices-output-csv", path=output_dir, prefix_filename="ksef", fileextension=".csv")
-                else:
-                    csv_output_filename = ksefMisc.create_filename_with_path(output_filename, path=output_dir)
-                if os.path.exists(csv_output_filename):
-                    invoicesDataCount = 0
-                    invoicesData, invoicesDataCount = ksefMisc.ksef_InvoicesAppendCSV(invoices_dict=invoicesData,  csv_output_filename=csv_output_filename)
-
-            if invoicesDataCount > 0:
                 ksefMisc.print_invoices_csv(invoicesData, output_path=output_dir, output_filename=output_filename, output_append=output_append, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir, is_quiet=is_q)
         else:
             ksefMisc.print_invoices_table(invoicesData, output_path=output_dir, is_quiet=is_q)

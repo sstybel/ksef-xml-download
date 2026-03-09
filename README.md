@@ -21,7 +21,7 @@ The output file in **JSON** format can be used by the [**KSeF PDF Generator**](h
 Since version [**1.20 releases**](https://github.com/sstybel/ksef-xml-download/releases/tag/1.20), one parameter have been added:
 * Silent mode (default: disabled)
 
-Since version [**1.30 releases**](https://github.com/sstybel/ksef-xml-download/releases/tag/1.30), one parameter have been added:
+Starting with version [**1.30 releases**](https://github.com/sstybel/ksef-xml-download/releases/tag/1.30), one parameter have been added:
 * Appending output data to an existing output file for **JSON** and **CSV** format (default: overwritten existing output file)
 
 Be sure to check out and download this tool as well: [**KSeF PDF Generator**](https://github.com/sstybel/ksef-pdf-generator)
