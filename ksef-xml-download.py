@@ -9,7 +9,7 @@ from ksef import ksefMisc
 from ksef import ksefError
 from ksef import ksefClient
 
-str_version = "1.20"
+str_version = "1.30"
 str_app_name ="KSeF XML Invoices Downloader - ver. " + str_version
 str_author = "Copyright (c) 2025 - 2026 by Sebastian Stybel, www.BONO-IT.pl"
 
@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 def main():
     is_q = False
+    xml_cache = {}
 
     parser = argparse.ArgumentParser(
         description='Download invoices from National e-Invoice System - KSeF (Krajowy System e-Faktur)',
@@ -41,6 +42,11 @@ Examples:
                          --xml-output-dir d:\\_test-ksef_\\invoices\\
         """
     )
+
+    def get_xml_cached(ksef_number):
+        if ksef_number not in xml_cache:
+            xml_cache[ksef_number] = client.get_invoice_xml(ksef_number)
+        return xml_cache[ksef_number]
 
     parser.add_argument('--nip', help='NIP (Tax ID) of the entity (required for KSeF queries)', required=(not(('--help' in sys.argv) or ('-h' in sys.argv))))
 
@@ -248,6 +254,8 @@ Examples:
         if args.ksef_state_dir:
             invoicesData = ksefMisc.ksef_CheckState(state_dir=args.ksef_state_dir, xml_sub1_output_dir=xml_sub1_output_dir, xml_sub2_output_dir=xml_sub2_output_dir, invoices_dict=invoicesData, is_quiet=is_q)
 
+        invoicesDataCount = len(invoicesData['Subject1']) + len(invoicesData['Subject2'])
+
         if args.output_dir:
             output_dir = str(args.output_dir)
             output_dir = str(output_dir).replace('/', f"\\")
@@ -258,57 +266,66 @@ Examples:
 
         if args.output == 'json':
             if output_append:
-                json_output_filename = ksefMisc.create_filename_with_path(output_filename, path=output_dir)
+                if (output_filename == ""):
+                    json_output_filename = ksefMisc.create_filename("invoices-output-json", path=output_dir, prefix_filename="ksef", fileextension=".json")  
+                else:
+                    json_output_filename = ksefMisc.create_filename_with_path(output_filename, path=output_dir)
                 if os.path.exists(json_output_filename):
-                    invoicesData = ksefMisc.ksef_InvoicesAppend(invoices_dict=invoicesData,  json_output_filename= json_output_filename, is_quiet=is_q)
+                    invoicesDataCount = 0
+                    invoicesData, invoicesDataCount = ksefMisc.ksef_InvoicesAppendJSON(invoices_dict=invoicesData,  json_output_filename=json_output_filename)
 
-            ksefMisc.print_invoices_json(invoicesData, output_path=output_dir, output_filename=output_filename, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir, is_quiet=is_q)
+            if invoicesDataCount > 0:
+                ksefMisc.print_invoices_json(invoicesData, output_path=output_dir, output_filename=output_filename, output_append=output_append, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir, is_quiet=is_q)
         elif args.output == 'csv':
-            ksefMisc.print_invoices_csv(invoicesData, output_path=output_dir, output_filename=output_filename, output_append=output_append, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir, is_quiet=is_q)
+            if output_append:
+                if (output_filename == ""):
+                    csv_output_filename = ksefMisc.create_filename("invoices-output-csv", path=output_dir, prefix_filename="ksef", fileextension=".csv")
+                else:
+                    csv_output_filename = ksefMisc.create_filename_with_path(output_filename, path=output_dir)
+                if os.path.exists(csv_output_filename):
+                    invoicesDataCount = 0
+                    invoicesData, invoicesDataCount = ksefMisc.ksef_InvoicesAppendCSV(invoices_dict=invoicesData,  csv_output_filename=csv_output_filename)
+
+            if invoicesDataCount > 0:
+                ksefMisc.print_invoices_csv(invoicesData, output_path=output_dir, output_filename=output_filename, output_append=output_append, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir, is_quiet=is_q)
         else:
             ksefMisc.print_invoices_table(invoicesData, output_path=output_dir, is_quiet=is_q)
 
-        xml_cache = {}
+        if invoicesDataCount > 0:
+            for invoicesSub in invoicesData:
+                invoices = invoicesData[invoicesSub]
 
-        def get_xml_cached(ksef_number):
-            if ksef_number not in xml_cache:
-                xml_cache[ksef_number] = client.get_invoice_xml(ksef_number)
-            return xml_cache[ksef_number]
+                if args.download_xml and invoices:
 
-        for invoicesSub in invoicesData:
-            invoices = invoicesData[invoicesSub]
+                    if invoicesSub == "Subject1":
+                        xml_path = xml_sub1_output_dir
+                    elif invoicesSub == "Subject2":
+                        xml_path = xml_sub2_output_dir
 
-            if args.download_xml and invoices:
+                    _xml_output_dir = xml_path
+                    _xml_output_dir = str(_xml_output_dir).replace('/', f"\\")
+                    _xml_output_dir = _xml_output_dir.replace(f"\\.\\", f".\\")
+                    ksefMisc.print_consol(f"\nDownloading KSeF XML file(s) from {ksefMisc.ksefSubjectTypeLabels[invoicesSub]} to: {_xml_output_dir}", is_quiet=is_q)
+                    os.makedirs(_xml_output_dir, exist_ok=True)
 
-                if invoicesSub == "Subject1":
-                    xml_path = xml_sub1_output_dir
-                elif invoicesSub == "Subject2":
-                    xml_path = xml_sub2_output_dir
-                _xml_output_dir = xml_path
-                _xml_output_dir = str(_xml_output_dir).replace('/', f"\\")
-                _xml_output_dir = _xml_output_dir.replace(f"\\.\\", f".\\")
-                ksefMisc.print_consol(f"\nDownloading KSeF XML file(s) from {ksefMisc.ksefSubjectTypeLabels[invoicesSub]} to: {_xml_output_dir}", is_quiet=is_q)
-                os.makedirs(_xml_output_dir, exist_ok=True)
+                    for inv in invoices:
+                        ksef_number = inv.get('ksefNumber')
+                        if ksef_number:
+                            try:
+                                xml_raw = get_xml_cached(ksef_number)
 
-                for inv in invoices:
-                    ksef_number = inv.get('ksefNumber')
-                    if ksef_number:
-                        try:
-                            xml_raw = get_xml_cached(ksef_number)
+                                safe_name = ksef_number.replace('/', '_').replace(f"\\", '_')
+                                filepath = ksefMisc.create_filename_with_path(f"{safe_name}.xml", path=_xml_output_dir)
 
-                            safe_name = ksef_number.replace('/', '_').replace(f"\\", '_')
-                            filepath = ksefMisc.create_filename_with_path(f"{safe_name}.xml", path=_xml_output_dir)
-
-                            with open(filepath, 'wb') as f:
-                                f.write(xml_raw)
-                            ksefMisc.print_consol(f"  Downloaded: {filepath}", is_quiet=is_q)
-                        except ksefError.ksefError as e:
-                            ksefMisc.print_consol(f"  Error downloading {ksef_number}: {e.message}", file=sys.stderr, is_quiet=is_q)
+                                with open(filepath, 'wb') as f:
+                                    f.write(xml_raw)
+                                ksefMisc.print_consol(f"  Downloaded: {filepath}", is_quiet=is_q)
+                            except ksefError.ksefError as e:
+                                ksefMisc.print_consol(f"  Error downloading {ksef_number}: {e.message}", file=sys.stderr, is_quiet=is_q)
 
         ksefMisc.print_consol("\nEnding session...", is_quiet=is_q)
         client.terminate_session()
         ksefMisc.print_consol("Session ended.", is_quiet=is_q)
-
     except ksefError.ksefError as e:
         ksefMisc.print_consol(f"\nERR-KSeF: {e.message}", file=sys.stderr, is_quiet=is_q)
         if e.response_data:
