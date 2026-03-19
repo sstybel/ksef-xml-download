@@ -9,7 +9,7 @@ from ksef import ksefMisc
 from ksef import ksefError
 from ksef import ksefClient
 
-str_version = "1.30"
+str_version = "1.40"
 str_app_name ="KSeF XML Invoices Downloader - ver. " + str_version
 str_author = "Copyright (c) 2025 - 2026 by Sebastian Stybel, www.BONO-IT.pl"
 

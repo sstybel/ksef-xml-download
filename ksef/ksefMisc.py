@@ -109,7 +109,7 @@ def print_invoices_csv(invoices_dict: dict = {}, output_path=".\\", output_filen
 
         with open(csv_output_filename, write_method, encoding='windows-1250') as csv_file:
             if write_method == 'w':
-                csv_header = f"\"ksefSubjectType\";\"ksefNumber\";\"formSystemCode\";\"formSchemaVersion\";\"formValue\";\"invoiceNumber\";\"invoiceIssueDate\";\"invoiceCurrency\";\"invoiceType\";\"invoicingMode\";\"invoiceHash\";\"sellerNIP\";\"sellerName\";\"buyerIdType\";\"buyerIdValue\";\"buyerName\";\"netAmount\";\"vatAmount\";\"grossAmount\";\"qrCode\";\"fileName\"" 
+                csv_header = f"\"ksefSubjectType\";\"ksefNumber\";\"formSystemCode\";\"formSchemaVersion\";\"formValue\";\"invoiceNumber\";\"invoiceIssueDate\";\"invoiceInvoicingDate\";\"invoiceCurrency\";\"invoiceType\";\"invoicingMode\";\"invoiceHash\";\"sellerNIP\";\"sellerName\";\"buyerIdType\";\"buyerIdValue\";\"buyerName\";\"netAmount\";\"vatAmount\";\"grossAmount\";\"qrCode\";\"fileName\"" 
                 print_consol(csv_header, is_quiet=is_quiet)
                 csv_file.write(csv_header + "\n")
 
@@ -134,6 +134,7 @@ def print_invoices_csv(invoices_dict: dict = {}, output_path=".\\", output_filen
 
                     inv_num = inv.get('invoiceNumber', 'N/A')[:19]
                     inv_date = inv.get('issueDate', 'N/A')[:11]
+                    inv_date2 = inv.get('invoicingDate', 'N/A')[:11]
                     inv_curr = inv.get('currency', 'N/A')
                     inv_type = inv.get('invoiceType', 'N/A')
                     inv_mode = inv.get('invoicingMode', 'N/A')
@@ -154,7 +155,8 @@ def print_invoices_csv(invoices_dict: dict = {}, output_path=".\\", output_filen
                     vat = format_amount_csv(inv.get('vatAmount'))
 
                     ksef_num_spl = ksef_num.split('-')
-                    qrCodeData = str(ksef_num_spl[1])
+                    #qrCodeData = str(ksef_num_spl[1])
+                    qrCodeData = inv_date
                     qrCodeData = qrCodeData[6:8]  + "-" + qrCodeData[4:6]  + "-" + qrCodeData[0:4]
                     grHash = str(inv_hash).split('=')[0]
                     grHash = grHash.replace('+', '-')
@@ -165,7 +167,7 @@ def print_invoices_csv(invoices_dict: dict = {}, output_path=".\\", output_filen
                     fileName = create_filename_with_path(fileName, path=xml_output_dir)
         
                     csv_record = ""
-                    csv_record = csv_record + f"\"{ksef_subtype}\";\"{ksef_num}\";\"{form_scode}\";\"{form_ver}\";\"{form_val}\";\"{inv_num}\";\"{inv_date}\";\"{inv_curr}\";\"{inv_type}\";\"{inv_mode}\";\"{inv_hash}\";\"{seller_nip}\";\"{seller_name}\";\"{buyer_type}\";\"{buyer_val}\";\"{buyer_name}\";\"{net}\";\"{vat}\";\"{gross}\";\"{qrCode}\";\"{fileName}\""
+                    csv_record = csv_record + f"\"{ksef_subtype}\";\"{ksef_num}\";\"{form_scode}\";\"{form_ver}\";\"{form_val}\";\"{inv_num}\";\"{inv_date}\";\"{inv_date2}\";\"{inv_curr}\";\"{inv_type}\";\"{inv_mode}\";\"{inv_hash}\";\"{seller_nip}\";\"{seller_name}\";\"{buyer_type}\";\"{buyer_val}\";\"{buyer_name}\";\"{net}\";\"{vat}\";\"{gross}\";\"{qrCode}\";\"{fileName}\""
                 
                     print_consol(csv_record.strip(), is_quiet=is_quiet)
                     csv_file.write(csv_record.strip() + "\n")
@@ -208,10 +210,12 @@ def print_invoices_json(invoices_dict: dict = {}, output_path=".\\", output_file
                 xml_output_dir = str(xml_output_dir).replace('/', f"\\")
                 xml_output_dir = xml_output_dir.replace(f"\\.\\", f".\\")
                 
+                inv_date = inv.get('issueDate', 'N/A')[:11]
                 ksef_num = inv_rec.get('ksefNumber', 'N/A')[:44]
                 inv_hash = inv_rec.get('invoiceHash', 'N/A')
                 ksef_num_spl = ksef_num.split('-')
-                qrCodeData = str(ksef_num_spl[1])
+                #qrCodeData = str(ksef_num_spl[1])
+                qrCodeData = inv_date
                 qrCodeData = qrCodeData[6:8]  + "-" + qrCodeData[4:6]  + "-" + qrCodeData[0:4]
                 grHash = str(inv_hash).split('=')[0]
                 grHash = grHash.replace('+', '-')
