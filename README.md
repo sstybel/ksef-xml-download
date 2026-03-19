@@ -24,6 +24,8 @@ Since version [**1.20 releases**](https://github.com/sstybel/ksef-xml-download/r
 Starting with version [**1.30 releases**](https://github.com/sstybel/ksef-xml-download/releases/tag/1.30), one parameter have been added:
 * Appending output data to an existing output file for **JSON** and **CSV** format (default: overwritten existing output file)
 
+In version [**1.40 releases**](https://github.com/sstybel/ksef-xml-download/releases/tag/1.40) releases, fixes have been made to the generation of invoice verification links in the **KSeF** system.
+
 Be sure to check out and download this tool as well: [**KSeF PDF Generator**](https://github.com/sstybel/ksef-pdf-generator)
 
 &nbsp;
