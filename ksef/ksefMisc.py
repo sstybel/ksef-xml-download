@@ -99,7 +99,11 @@ def print_invoices_csv(invoices_dict: dict = {}, output_path=".\\", output_filen
         print_consol("No invoices found", is_quiet=is_quiet)
         return
 
-    invoices_dict_count = len(invoices_dict['Subject1']) + len(invoices_dict['Subject2'])
+    invoices_dict_count = 0
+    if ('Subject1' in invoices_dict):
+        invoices_dict_count =+ len(invoices_dict['Subject1'])
+    if ('Subject2' in invoices_dict):
+        invoices_dict_count =+ len(invoices_dict['Subject2'])
 
     if invoices_dict_count > 0:
         write_method = 'w'
@@ -133,8 +137,8 @@ def print_invoices_csv(invoices_dict: dict = {}, output_path=".\\", output_filen
                     form_val = form_code.get('value', 'N/A') if isinstance(form_code, dict) else 'N/A'
 
                     inv_num = inv.get('invoiceNumber', 'N/A')[:19]
-                    inv_date = inv.get('issueDate', 'N/A')[:11]
-                    inv_date2 = inv.get('invoicingDate', 'N/A')[:11]
+                    inv_date = str(inv.get('issueDate', 'N/A')[:10])
+                    inv_date2 = str(inv.get('invoicingDate', 'N/A')[:10])
                     inv_curr = inv.get('currency', 'N/A')
                     inv_type = inv.get('invoiceType', 'N/A')
                     inv_mode = inv.get('invoicingMode', 'N/A')
@@ -155,9 +159,8 @@ def print_invoices_csv(invoices_dict: dict = {}, output_path=".\\", output_filen
                     vat = format_amount_csv(inv.get('vatAmount'))
 
                     ksef_num_spl = ksef_num.split('-')
-                    #qrCodeData = str(ksef_num_spl[1])
                     qrCodeData = inv_date
-                    qrCodeData = qrCodeData[6:8]  + "-" + qrCodeData[4:6]  + "-" + qrCodeData[0:4]
+                    qrCodeData = qrCodeData[8:10]  + "-" + qrCodeData[5:7]  + "-" + qrCodeData[0:4]
                     grHash = str(inv_hash).split('=')[0]
                     grHash = grHash.replace('+', '-')
                     grHash = grHash.replace('/', '_')
@@ -184,7 +187,11 @@ def print_invoices_json(invoices_dict: dict = {}, output_path=".\\", output_file
         print_consol("No invoices found", is_quiet=is_quiet)
         return
     
-    invoices_dict_count = len(invoices_dict['Subject1']) + len(invoices_dict['Subject2'])
+    invoices_dict_count = 0
+    if ('Subject1' in invoices_dict):
+        invoices_dict_count =+ len(invoices_dict['Subject1'])
+    if ('Subject2' in invoices_dict):
+        invoices_dict_count =+ len(invoices_dict['Subject2'])
 
     _invoices = {}
     for subject_type, invoices in invoices_dict.items():
@@ -210,13 +217,12 @@ def print_invoices_json(invoices_dict: dict = {}, output_path=".\\", output_file
                 xml_output_dir = str(xml_output_dir).replace('/', f"\\")
                 xml_output_dir = xml_output_dir.replace(f"\\.\\", f".\\")
                 
-                inv_date = inv.get('issueDate', 'N/A')[:11]
+                inv_date = str(inv_rec.get('issueDate', 'N/A')[:10])
                 ksef_num = inv_rec.get('ksefNumber', 'N/A')[:44]
                 inv_hash = inv_rec.get('invoiceHash', 'N/A')
                 ksef_num_spl = ksef_num.split('-')
-                #qrCodeData = str(ksef_num_spl[1])
                 qrCodeData = inv_date
-                qrCodeData = qrCodeData[6:8]  + "-" + qrCodeData[4:6]  + "-" + qrCodeData[0:4]
+                qrCodeData = qrCodeData[8:10]  + "-" + qrCodeData[5:7]  + "-" + qrCodeData[0:4]
                 grHash = str(inv_hash).split('=')[0]
                 grHash = grHash.replace('+', '-')
                 grHash = grHash.replace('/', '_')

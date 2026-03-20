@@ -254,7 +254,11 @@ Examples:
         if args.ksef_state_dir:
             invoicesData = ksefMisc.ksef_CheckState(state_dir=args.ksef_state_dir, xml_sub1_output_dir=xml_sub1_output_dir, xml_sub2_output_dir=xml_sub2_output_dir, invoices_dict=invoicesData, is_quiet=is_q)
 
-        invoicesDataCount = len(invoicesData['Subject1']) + len(invoicesData['Subject2'])
+        invoicesDataCount = 0
+        if ('Subject1' in invoicesData):
+            invoicesDataCount =+ len(invoicesData['Subject1']) 
+        if ('Subject2' in invoicesData):
+            invoicesDataCount =+ len(invoicesData['Subject2'])
 
         if args.output_dir:
             output_dir = str(args.output_dir)
