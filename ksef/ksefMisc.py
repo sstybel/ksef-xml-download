@@ -1,11 +1,7 @@
 import os
-import csv
 import json
 import datetime
-from typing import Optional, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from _typeshed import SupportsWrite
+from typing import IO
 
 ksefSubjectTypeLabels = {
     "Subject1and2": "issued (sales) and received (purchases) - Subject1 and Subject2",
@@ -13,7 +9,7 @@ ksefSubjectTypeLabels = {
     "Subject2": "received (purchases) - Subject2"
 }
 
-def print_consol(mess: str, file: SupportsWrite[str] | None = None, is_quiet=False):
+def print_consol(mess: str, file: IO | None = None, is_quiet=False):
     if (not is_quiet):
         print(mess, file=file)
 
