@@ -9,6 +9,12 @@ ksefSubjectTypeLabels = {
     "Subject2": "received (purchases) - Subject2"
 }
 
+def linux_path(path: str, is_linux=False) -> str:
+    if is_linux:
+        return path.replace(f"\\", '/')
+    else:
+        return path
+
 def print_consol(mess: str, file: IO | None = None, is_quiet=False):
     if (not is_quiet):
         print(mess, file=file)
@@ -35,22 +41,23 @@ def format_amount_csv(amount) -> str:
     val = format_amount(amount)
     return str(val).replace('.', ',')
     
-def create_filename_with_path(filename, path=".\\"):
+def create_filename_with_path(filename, path=".\\", is_linux=False):
     filepath = os.path.join(path, f"{filename}")
     filepath = filepath.replace('/', f"\\")
     filepath = filepath.replace(f"\\.\\", f".\\")
+    filepath = linux_path(filepath, is_linux)
 
     return filepath
 
-def create_filename(filename, path=".\\", prefix_filename="ksef", fileextension=".json"):
+def create_filename(filename, path=".\\", prefix_filename="ksef", fileextension=".json", is_linux=False):
     str_timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     new_filename = f"{prefix_filename}_{filename}_{str_timestamp}{fileextension}"
-    filepath = create_filename_with_path(new_filename, path=path)
+    filepath = create_filename_with_path(new_filename, path=path, is_linux=is_linux)
 
     return filepath
 
-def print_invoices_table(invoices_dict: dict = {}, output_path=".\\", is_quiet=False):
-    tab_output_filename = create_filename("invoices-output-table", path=output_path, prefix_filename="ksef", fileextension=".txt")  
+def print_invoices_table(invoices_dict: dict = {}, output_path=".\\", is_quiet=False, is_linux=False):
+    tab_output_filename = create_filename("invoices-output-table", path=output_path, prefix_filename="ksef", fileextension=".txt", is_linux=is_linux)  
 
     if not invoices_dict:
         print_consol("No invoices found", is_quiet=is_quiet)
@@ -85,11 +92,11 @@ def print_invoices_table(invoices_dict: dict = {}, output_path=".\\", is_quiet=F
         tab_file.write("=" * 140 + "\n")
         tab_file.write(f"Total: {len(invoices)} invoice(s)\n")
 
-def print_invoices_csv(invoices_dict: dict = {}, output_path=".\\", output_filename="", output_append=False, xml_sub1_output_path=".\\", xml_sub2_output_path=".\\", is_quiet=False):
+def print_invoices_csv(invoices_dict: dict = {}, output_path=".\\", output_filename="", output_append=False, xml_sub1_output_path=".\\", xml_sub2_output_path=".\\", is_quiet=False, is_linux=False):
     if (output_filename == ""):
-        csv_output_filename = create_filename("invoices-output-csv", path=output_path, prefix_filename="ksef", fileextension=".csv")
+        csv_output_filename = create_filename("invoices-output-csv", path=output_path, prefix_filename="ksef", fileextension=".csv", is_linux=is_linux)
     else:
-        csv_output_filename = create_filename_with_path(output_filename, path=output_path)
+        csv_output_filename = create_filename_with_path(output_filename, path=output_path, is_linux=is_linux)
 
     if not invoices_dict:
         print_consol("No invoices found", is_quiet=is_quiet)
@@ -163,7 +170,7 @@ def print_invoices_csv(invoices_dict: dict = {}, output_path=".\\", output_filen
                     qrCode = 'https://qr.ksef.mf.gov.pl/invoice/' + ksef_num_spl[0] + '/' + qrCodeData + '/' + grHash
                     fileName = f"{ksef_num}.xml"
                     fileName= fileName.replace('/', '_').replace(f"\\", '_')
-                    fileName = create_filename_with_path(fileName, path=xml_output_dir)
+                    fileName = create_filename_with_path(fileName, path=xml_output_dir, is_linux=is_linux)
         
                     csv_record = ""
                     csv_record = csv_record + f"\"{ksef_subtype}\";\"{ksef_num}\";\"{form_scode}\";\"{form_ver}\";\"{form_val}\";\"{inv_num}\";\"{inv_date}\";\"{inv_date2}\";\"{inv_curr}\";\"{inv_type}\";\"{inv_mode}\";\"{inv_hash}\";\"{seller_nip}\";\"{seller_name}\";\"{buyer_type}\";\"{buyer_val}\";\"{buyer_name}\";\"{net}\";\"{vat}\";\"{gross}\";\"{qrCode}\";\"{fileName}\""
@@ -173,11 +180,11 @@ def print_invoices_csv(invoices_dict: dict = {}, output_path=".\\", output_filen
     else:
         print_consol("No new invoices found", is_quiet=is_quiet)
 
-def print_invoices_json(invoices_dict: dict = {}, output_path=".\\", output_filename="", output_append=False, xml_sub1_output_path=".\\", xml_sub2_output_path=".\\", is_quiet=False):
+def print_invoices_json(invoices_dict: dict = {}, output_path=".\\", output_filename="", output_append=False, xml_sub1_output_path=".\\", xml_sub2_output_path=".\\", is_quiet=False, is_linux=False):
     if (output_filename == ""):
-        json_output_filename = create_filename("invoices-output-json", path=output_path, prefix_filename="ksef", fileextension=".json")  
+        json_output_filename = create_filename("invoices-output-json", path=output_path, prefix_filename="ksef", fileextension=".json", is_linux=is_linux)  
     else:
-        json_output_filename = create_filename_with_path(output_filename, path=output_path)
+        json_output_filename = create_filename_with_path(output_filename, path=output_path, is_linux=is_linux)
 
     if not invoices_dict:
         print_consol("No invoices found", is_quiet=is_quiet)
@@ -225,7 +232,7 @@ def print_invoices_json(invoices_dict: dict = {}, output_path=".\\", output_file
                 qrCode = 'https://qr.ksef.mf.gov.pl/invoice/' + ksef_num_spl[0] + '/' + qrCodeData + '/' + grHash
                 fileName = f"{ksef_num}.xml"
                 fileName= fileName.replace('/', '_').replace(f"\\", '_')
-                fileName = create_filename_with_path(fileName, path=xml_output_dir)
+                fileName = create_filename_with_path(fileName, path=xml_output_dir, is_linux=is_linux)
 
                 _invoices[inv_sub][inv_rec_num].update({"qrCode": qrCode})
                 _invoices[inv_sub][inv_rec_num].update({"fileName": fileName})
@@ -250,9 +257,9 @@ def print_invoices_json(invoices_dict: dict = {}, output_path=".\\", output_file
 
     print_consol(json.dumps(_invoices, indent=4, ensure_ascii=False, default=str), is_quiet=is_quiet)
 
-def ksef_CheckState(state_dir = ".\\", xml_sub1_output_dir = ".\\", xml_sub2_output_dir = ".\\", invoices_dict: dict = {}, is_quiet=False) -> dict:
+def ksef_CheckState(state_dir = ".\\", xml_sub1_output_dir = ".\\", xml_sub2_output_dir = ".\\", invoices_dict: dict = {}, is_quiet=False, is_linux=False) -> dict:
 
-    state_file_path = create_filename_with_path('ksef_state.json', path=state_dir)
+    state_file_path = create_filename_with_path('ksef_state.json', path=state_dir, is_linux=is_linux)
 
     _invoices_dict = {}
     for subject_type, invoices in invoices_dict.items():
@@ -283,7 +290,7 @@ def ksef_CheckState(state_dir = ".\\", xml_sub1_output_dir = ".\\", xml_sub2_out
                     elif subject_type == "Subject2":
                         xml_output_dir = xml_sub2_output_dir
                     safe_name = ksef_number.replace('/', '_').replace(f"\\", '_')
-                    xmlfilepath = create_filename_with_path(f"{safe_name}.xml", path=xml_output_dir)
+                    xmlfilepath = create_filename_with_path(f"{safe_name}.xml", path=xml_output_dir, is_linux=is_linux)
 
                     state_ksef = {"ksefNumber": ksef_number, "SubjectType": subject_type, "Hash": invoice['invoiceHash'], "IssueDate": invoice['issueDate'], "xmlFilePath": xmlfilepath}
                     state_data.update({ksef_idx: state_ksef})

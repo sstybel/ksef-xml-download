@@ -18,6 +18,11 @@ logger = logging.getLogger(__name__)
 def main():
     is_q = False
     xml_cache = {}
+    
+    is_linux = False
+    os_str = str(sys.platform).lower()
+    if (os_str == "linux" or os_str == "linux2"):
+        is_linux = True
 
     parser = argparse.ArgumentParser(
         description='Download invoices from National e-Invoice System - KSeF (Krajowy System e-Faktur)',
@@ -69,7 +74,7 @@ Examples:
     parser.add_argument('--ksef-state-dir', default=None,
                         help='Path to the state file (ksef_state.json) for downloading invoices from the KSeF system. If not provided, the state will be stored in the current directory.')    
     parser.add_argument('--output', choices=['json', 'csv', 'table'], default='json',
-                        help='Output format of results to display and save to file under the name according to the pattern ksef_invoices-output-[json | csv | txt]_YYYYMMDDhhmmss.[json | csv | txt] (default output format: json)')
+                        help='Output format of results to display and save to file under the name according to the pattern ksef_invoices-output-[json | csv | txt]_YYYYMMDDhhmmss.[json / csv | txt] (default output format: json)')
     parser.add_argument('--output-dir', default=f".\\",
                         help='Directory to save output files (default: current directory)')
     parser.add_argument('--output-filename',
@@ -252,7 +257,7 @@ Examples:
             invoicesData = {f"{subject_type}": invSubX}
 
         if args.ksef_state_dir:
-            invoicesData = ksefMisc.ksef_CheckState(state_dir=args.ksef_state_dir, xml_sub1_output_dir=xml_sub1_output_dir, xml_sub2_output_dir=xml_sub2_output_dir, invoices_dict=invoicesData, is_quiet=is_q)
+            invoicesData = ksefMisc.ksef_CheckState(state_dir=args.ksef_state_dir, xml_sub1_output_dir=xml_sub1_output_dir, xml_sub2_output_dir=xml_sub2_output_dir, invoices_dict=invoicesData, is_quiet=is_q, is_linux=is_linux)
 
         invoicesDataCount = 0
         if ('Subject1' in invoicesData):
@@ -264,16 +269,17 @@ Examples:
             output_dir = str(args.output_dir)
             output_dir = str(output_dir).replace('/', f"\\")
             output_dir = output_dir.replace(f"\\.\\", f".\\")
+            output_dir = ksefMisc.linux_path(output_dir, is_linux=is_linux)
             os.makedirs(output_dir, exist_ok=True)
         else:
             output_dir = f".\\"
 
         if args.output == 'json':
-            ksefMisc.print_invoices_json(invoicesData, output_path=output_dir, output_filename=output_filename, output_append=output_append, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir, is_quiet=is_q)
+            ksefMisc.print_invoices_json(invoicesData, output_path=output_dir, output_filename=output_filename, output_append=output_append, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir, is_quiet=is_q, is_linux=is_linux)
         elif args.output == 'csv':
-                ksefMisc.print_invoices_csv(invoicesData, output_path=output_dir, output_filename=output_filename, output_append=output_append, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir, is_quiet=is_q)
+                ksefMisc.print_invoices_csv(invoicesData, output_path=output_dir, output_filename=output_filename, output_append=output_append, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir, is_quiet=is_q, is_linux=is_linux)
         else:
-            ksefMisc.print_invoices_table(invoicesData, output_path=output_dir, is_quiet=is_q)
+            ksefMisc.print_invoices_table(invoicesData, output_path=output_dir, is_quiet=is_q, is_linux=is_linux)
 
         if invoicesDataCount > 0:
             for invoicesSub in invoicesData:
@@ -289,6 +295,7 @@ Examples:
                     _xml_output_dir = xml_path
                     _xml_output_dir = str(_xml_output_dir).replace('/', f"\\")
                     _xml_output_dir = _xml_output_dir.replace(f"\\.\\", f".\\")
+                    _xml_output_dir = ksefMisc.linux_path(_xml_output_dir, is_linux)
                     ksefMisc.print_consol(f"\nDownloading KSeF XML file(s) from {ksefMisc.ksefSubjectTypeLabels[invoicesSub]} to: {_xml_output_dir}", is_quiet=is_q)
                     os.makedirs(_xml_output_dir, exist_ok=True)
 
@@ -299,7 +306,7 @@ Examples:
                                 xml_raw = get_xml_cached(ksef_number)
 
                                 safe_name = ksef_number.replace('/', '_').replace(f"\\", '_')
-                                filepath = ksefMisc.create_filename_with_path(f"{safe_name}.xml", path=_xml_output_dir)
+                                filepath = ksefMisc.create_filename_with_path(f"{safe_name}.xml", path=_xml_output_dir, is_linux=is_linux)
 
                                 with open(filepath, 'wb') as f:
                                     f.write(xml_raw)
