@@ -104,9 +104,9 @@ def print_invoices_csv(invoices_dict: dict = {}, output_path=".\\", output_filen
 
     invoices_dict_count = 0
     if ('Subject1' in invoices_dict):
-        invoices_dict_count =+ len(invoices_dict['Subject1'])
+        invoices_dict_count += len(invoices_dict['Subject1'])
     if ('Subject2' in invoices_dict):
-        invoices_dict_count =+ len(invoices_dict['Subject2'])
+        invoices_dict_count += len(invoices_dict['Subject2'])
 
     if invoices_dict_count > 0:
         write_method = 'w'
@@ -192,9 +192,9 @@ def print_invoices_json(invoices_dict: dict = {}, output_path=".\\", output_file
     
     invoices_dict_count = 0
     if ('Subject1' in invoices_dict):
-        invoices_dict_count =+ len(invoices_dict['Subject1'])
+        invoices_dict_count += len(invoices_dict['Subject1'])
     if ('Subject2' in invoices_dict):
-        invoices_dict_count =+ len(invoices_dict['Subject2'])
+        invoices_dict_count += len(invoices_dict['Subject2'])
 
     _invoices = {}
     for subject_type, invoices in invoices_dict.items():
@@ -257,7 +257,7 @@ def print_invoices_json(invoices_dict: dict = {}, output_path=".\\", output_file
 
     print_consol(json.dumps(_invoices, indent=4, ensure_ascii=False, default=str), is_quiet=is_quiet)
 
-def ksef_CheckState(state_dir = ".\\", xml_sub1_output_dir = ".\\", xml_sub2_output_dir = ".\\", invoices_dict: dict = {}, is_quiet=False, is_linux=False) -> dict:
+def ksef_CheckState(state_dir = ".\\", xml_sub1_output_dir = ".\\", xml_sub2_output_dir = ".\\", invoices_dict: dict = {}, is_quiet=False, is_save=True, is_linux=False) -> dict:
 
     state_file_path = create_filename_with_path('ksef_state.json', path=state_dir, is_linux=is_linux)
 
@@ -295,9 +295,10 @@ def ksef_CheckState(state_dir = ".\\", xml_sub1_output_dir = ".\\", xml_sub2_out
                     state_ksef = {"ksefNumber": ksef_number, "SubjectType": subject_type, "Hash": invoice['invoiceHash'], "IssueDate": invoice['issueDate'], "xmlFilePath": xmlfilepath}
                     state_data.update({ksef_idx: state_ksef})
 
-    os.makedirs(state_dir, exist_ok=True)
-    with open(state_file_path, 'w', encoding='utf-8') as state_file:
-        json.dump(state_data, state_file, ensure_ascii=False, indent=4)
-    print_consol(f"KSeF state saved to: {state_file_path}", is_quiet=is_quiet)
+    if is_save:
+        os.makedirs(state_dir, exist_ok=True)
+        with open(state_file_path, 'w', encoding='utf-8') as state_file:
+            json.dump(state_data, state_file, ensure_ascii=False, indent=4)
+        print_consol(f"KSeF state saved to: {state_file_path}", is_quiet=is_quiet)
 
     return _invoices_dict

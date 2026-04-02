@@ -9,7 +9,7 @@ from ksef import ksefMisc
 from ksef import ksefError
 from ksef import ksefClient
 
-str_version = "1.40"
+str_version = "1.45"
 str_app_name ="KSeF XML Invoices Downloader - ver. " + str_version
 str_author = "Copyright (c) 2025 - 2026 by Sebastian Stybel, www.BONO-IT.pl"
 
@@ -256,14 +256,15 @@ Examples:
             invSubX = result.get('invoices', [])
             invoicesData = {f"{subject_type}": invSubX}
 
-        if args.ksef_state_dir:
-            invoicesData = ksefMisc.ksef_CheckState(state_dir=args.ksef_state_dir, xml_sub1_output_dir=xml_sub1_output_dir, xml_sub2_output_dir=xml_sub2_output_dir, invoices_dict=invoicesData, is_quiet=is_q, is_linux=is_linux)
+        ksef_state_dir = args.ksef_state_dir if args.ksef_state_dir else None
+        if ksef_state_dir:
+            invoicesData = ksefMisc.ksef_CheckState(state_dir=ksef_state_dir, xml_sub1_output_dir=xml_sub1_output_dir, xml_sub2_output_dir=xml_sub2_output_dir, invoices_dict=invoicesData, is_quiet=is_q, is_save=False, is_linux=is_linux)
 
         invoicesDataCount = 0
         if ('Subject1' in invoicesData):
-            invoicesDataCount =+ len(invoicesData['Subject1']) 
+            invoicesDataCount += len(invoicesData['Subject1']) 
         if ('Subject2' in invoicesData):
-            invoicesDataCount =+ len(invoicesData['Subject2'])
+            invoicesDataCount += len(invoicesData['Subject2'])
 
         if args.output_dir:
             output_dir = str(args.output_dir)
@@ -274,12 +275,7 @@ Examples:
         else:
             output_dir = f".\\"
 
-        if args.output == 'json':
-            ksefMisc.print_invoices_json(invoicesData, output_path=output_dir, output_filename=output_filename, output_append=output_append, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir, is_quiet=is_q, is_linux=is_linux)
-        elif args.output == 'csv':
-                ksefMisc.print_invoices_csv(invoicesData, output_path=output_dir, output_filename=output_filename, output_append=output_append, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir, is_quiet=is_q, is_linux=is_linux)
-        else:
-            ksefMisc.print_invoices_table(invoicesData, output_path=output_dir, is_quiet=is_q, is_linux=is_linux)
+        _invoicesData = {}
 
         if invoicesDataCount > 0:
             for invoicesSub in invoicesData:
@@ -311,8 +307,45 @@ Examples:
                                 with open(filepath, 'wb') as f:
                                     f.write(xml_raw)
                                 ksefMisc.print_consol(f"  Downloaded: {filepath}", is_quiet=is_q)
+
+                                if invoicesSub == "Subject1":
+                                    if "Subject1" in _invoicesData:
+                                        _invoicesData["Subject1"].extend([inv])
+                                    else:
+                                        _invoicesData.update({f"Subject1": [inv]})
+                                        
+                                if invoicesSub == "Subject2":
+                                    if "Subject2" in _invoicesData:
+                                        _invoicesData["Subject2"].extend([inv])
+                                    else:
+                                        _invoicesData.update({f"Subject2": [inv]})
+
                             except ksefError.ksefError as e:
                                 ksefMisc.print_consol(f"  Error downloading {ksef_number}: {e.message}", file=sys.stderr, is_quiet=is_q)
+                else:
+                    for subject_type, invoices in invoicesData.items():
+                        _invoicesData[subject_type] = invoices.copy()
+
+        _invoicesDataCount = 0
+        if ('Subject1' in _invoicesData):
+            Sub1Count = len(_invoicesData['Subject1'])
+            _invoicesDataCount += Sub1Count
+            ksefMisc.print_consol(f"\nTotal invoices {ksefMisc.ksefSubjectTypeLabels['Subject1']}: {Sub1Count}", is_quiet=is_q)
+        if ('Subject2' in _invoicesData):
+            Sub2Count = len(_invoicesData['Subject2'])
+            ksefMisc.print_consol(f"Total invoices {ksefMisc.ksefSubjectTypeLabels['Subject2']}: {Sub2Count}", is_quiet=is_q)
+            _invoicesDataCount += Sub2Count
+        ksefMisc.print_consol(f"Total invoices: {_invoicesDataCount}", is_quiet=is_q)
+
+        if ksef_state_dir:
+            _invoicesData = ksefMisc.ksef_CheckState(state_dir=ksef_state_dir, xml_sub1_output_dir=xml_sub1_output_dir, xml_sub2_output_dir=xml_sub2_output_dir, invoices_dict=_invoicesData, is_quiet=is_q, is_save=True, is_linux=is_linux)
+
+        if args.output == 'json':
+            ksefMisc.print_invoices_json(_invoicesData, output_path=output_dir, output_filename=output_filename, output_append=output_append, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir, is_quiet=is_q, is_linux=is_linux)
+        elif args.output == 'csv':
+                ksefMisc.print_invoices_csv(_invoicesData, output_path=output_dir, output_filename=output_filename, output_append=output_append, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir, is_quiet=is_q, is_linux=is_linux)
+        else:
+            ksefMisc.print_invoices_table(_invoicesData, output_path=output_dir, is_quiet=is_q, is_linux=is_linux)
 
         ksefMisc.print_consol("\nEnding session...", is_quiet=is_q)
         client.terminate_session()
@@ -320,7 +353,8 @@ Examples:
     except ksefError.ksefError as e:
         ksefMisc.print_consol(f"\nERR-KSeF: {e.message}", file=sys.stderr, is_quiet=is_q)
         if e.response_data:
-            ksefMisc.print_consol(f"ERR-KSeF-Details: {json.dumps(e.response_data, indent=2)}", file=sys.stderr, is_quiet=is_q)
+            message_details = json.dumps(e.response_data, indent=2, ensure_ascii=False)
+            ksefMisc.print_consol(f"ERR-KSeF-Details: {message_details}", file=sys.stderr, is_quiet=is_q)
         sys.exit(1)
     except Exception as e:
         ksefMisc.print_consol(f"\nERR-Unexpected: {e}", file=sys.stderr, is_quiet=is_q)

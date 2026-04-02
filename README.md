@@ -26,6 +26,8 @@ Starting with version [**1.30 releases**](https://github.com/sstybel/ksef-xml-do
 
 In version [**1.40 releases**](https://github.com/sstybel/ksef-xml-download/releases/tag/1.40) releases, fixes have been made to the generation of invoice verification links in the **KSeF** system.
 
+In version [**1.45 releases**](https://github.com/sstybel/ksef-xml-download/releases/tag/1.45) releases, this patch fixes minor bugs and improves the tool's performance in terms of optimizing incremental invoice downloads from the **KSeF** system.
+
 Be sure to check out and download this tool as well: [**KSeF PDF Generator**](https://github.com/sstybel/ksef-pdf-generator)
 
 &nbsp;
