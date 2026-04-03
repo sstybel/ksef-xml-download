@@ -327,18 +327,22 @@ Examples:
                         _invoicesData[subject_type] = invoices.copy()
 
         _invoicesDataCount = 0
+        ksefMisc.print_consol(f"", is_quiet=is_q)
+        
         if ('Subject1' in _invoicesData):
             Sub1Count = len(_invoicesData['Subject1'])
             _invoicesDataCount += Sub1Count
-            ksefMisc.print_consol(f"\nTotal invoices {ksefMisc.ksefSubjectTypeLabels['Subject1']}: {Sub1Count}", is_quiet=is_q)
+            ksefMisc.print_consol(f"Total invoices {ksefMisc.ksefSubjectTypeLabels['Subject1']}: {Sub1Count}", is_quiet=is_q)
         if ('Subject2' in _invoicesData):
             Sub2Count = len(_invoicesData['Subject2'])
             ksefMisc.print_consol(f"Total invoices {ksefMisc.ksefSubjectTypeLabels['Subject2']}: {Sub2Count}", is_quiet=is_q)
             _invoicesDataCount += Sub2Count
-        ksefMisc.print_consol(f"Total invoices: {_invoicesDataCount}", is_quiet=is_q)
+        
+        ksefMisc.print_consol(f"Total invoices: {_invoicesDataCount}\n", is_quiet=is_q)
 
         if ksef_state_dir:
             _invoicesData = ksefMisc.ksef_CheckState(state_dir=ksef_state_dir, xml_sub1_output_dir=xml_sub1_output_dir, xml_sub2_output_dir=xml_sub2_output_dir, invoices_dict=_invoicesData, is_quiet=is_q, is_save=True, is_linux=is_linux)
+            ksefMisc.print_consol(f"", is_quiet=is_q)
 
         if args.output == 'json':
             ksefMisc.print_invoices_json(_invoicesData, output_path=output_dir, output_filename=output_filename, output_append=output_append, xml_sub1_output_path=xml_sub1_output_dir, xml_sub2_output_path=xml_sub2_output_dir, is_quiet=is_q, is_linux=is_linux)
@@ -347,7 +351,7 @@ Examples:
         else:
             ksefMisc.print_invoices_table(_invoicesData, output_path=output_dir, is_quiet=is_q, is_linux=is_linux)
 
-        ksefMisc.print_consol("\nEnding session...", is_quiet=is_q)
+        ksefMisc.print_consol(f"\nEnding session...", is_quiet=is_q)
         client.terminate_session()
         ksefMisc.print_consol("Session ended.", is_quiet=is_q)
     except ksefError.ksefError as e:
